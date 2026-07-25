@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  background-color: #faf7f2;
+  color: #2b2620;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d8cfc0;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #c3b7a2;
+}
+
+.prose-notes {
+  line-height: 1.7;
+}
+.prose-notes h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 1.2rem 0 0.6rem;
+}
+.prose-notes h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 1.1rem 0 0.5rem;
+}
+.prose-notes h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 1rem 0 0.4rem;
+}
+.prose-notes p {
+  margin: 0.5rem 0;
+}
+.prose-notes ul {
+  list-style: disc;
+  padding-left: 1.4rem;
+  margin: 0.5rem 0;
+}
+.prose-notes ol {
+  list-style: decimal;
+  padding-left: 1.4rem;
+  margin: 0.5rem 0;
+}
+.prose-notes a {
+  color: #8a5a2b;
+  text-decoration: underline;
+}
+.prose-notes code {
+  background: #efe8da;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+.prose-notes pre {
+  background: #2b2620;
+  color: #faf7f2;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 0.6rem 0;
+}
+.prose-notes pre code {
+  background: transparent;
+  padding: 0;
+}
+.prose-notes blockquote {
+  border-left: 3px solid #d8cfc0;
+  padding-left: 0.8rem;
+  color: #6b6558;
+  margin: 0.6rem 0;
+}
