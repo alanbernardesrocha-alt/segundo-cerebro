@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Sidebar from "@/components/Sidebar";
 import "./globals.css";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Segundo Cérebro",
   description: "Suas anotações e referências, conectadas.",
