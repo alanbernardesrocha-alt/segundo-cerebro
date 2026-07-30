@@ -1,26 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPrisma } from "@/lib/prisma";
+import { getDB, listItems, createItem } from "@/lib/db";
 import type { ItemType } from "@/lib/types";
 
 export async function GET(req: NextRequest) {
-  const prisma = await getPrisma();
+  const db = await getDB();
   const { searchParams } = new URL(req.url);
   const spaceId = searchParams.get("spaceId") ?? undefined;
   const type = searchParams.get("type") as ItemType | null;
 
-  const items = await prisma.item.findMany({
-    where: {
-      spaceId: spaceId || undefined,
-      type: type || undefined,
-    },
-    include: { space: true },
-    orderBy: { updatedAt: "desc" },
-  });
+  const items = await listItems(
+    db,
+    { spaceId: spaceId || undefined, type: type || undefined },
+    { orderByUpdatedAt: true }
+  );
   return NextResponse.json(items);
 }
 
 export async function POST(req: NextRequest) {
-  const prisma = await getPrisma();
+  const db = await getDB();
   const body = (await req.json()) as any;
   const title = String(body.title ?? "").trim();
   const spaceId = String(body.spaceId ?? "");
@@ -35,15 +32,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "URL é obrigatória para um link." }, { status: 400 });
   }
 
-  const item = await prisma.item.create({
-    data: {
-      title,
-      spaceId,
-      type,
-      content: body.content ?? null,
-      url: type === "LINK" ? String(body.url).trim() : null,
-    },
-    include: { space: true },
+  const item = await createItem(db, {
+    title,
+    spaceId,
+    type,
+    content: body.content ?? null,
+    url: type === "LINK" ? String(body.url).trim() : null,
   });
   return NextResponse.json(item, { status: 201 });
 }

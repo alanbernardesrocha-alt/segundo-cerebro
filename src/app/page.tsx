@@ -1,26 +1,20 @@
 import Link from "next/link";
-import { getPrisma } from "@/lib/prisma";
+import { getDB, listSpacesWithCounts, listItems } from "@/lib/db";
 import ItemCard from "@/components/ItemCard";
 import NewItemButton from "@/components/NewItemButton";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const prisma = await getPrisma();
-  const [spaces, recentItems, totalConnections] = await Promise.all([
-    prisma.space.findMany({
-      orderBy: { createdAt: "asc" },
-      include: { _count: { select: { items: true } } },
-    }),
-    prisma.item.findMany({
-      include: { space: true },
-      orderBy: { updatedAt: "desc" },
-      take: 8,
-    }),
-    prisma.connection.count(),
+  const db = await getDB();
+  const [spaces, recentItems, connectionCountRow] = await Promise.all([
+    listSpacesWithCounts(db),
+    listItems(db, {}, { orderByUpdatedAt: true, limit: 8 }),
+    db.prepare(`SELECT COUNT(*) as count FROM "Connection"`).first<{ count: number }>(),
   ]);
+  const totalConnections = connectionCountRow?.count ?? 0;
 
-  const totalItems = spaces.reduce((sum, s) => sum + s._count.items, 0);
+  const totalItems = spaces.reduce((sum, s) => sum + s.itemCount, 0);
 
   return (
     <div className="mx-auto max-w-5xl px-8 py-10">
@@ -67,7 +61,7 @@ export default async function DashboardPage() {
                     <p className="line-clamp-2 text-xs text-[#8a8270]">{space.description}</p>
                   )}
                   <span className="text-xs text-[#a89d86]">
-                    {space._count.items} {space._count.items === 1 ? "item" : "itens"}
+                    {space.itemCount} {space.itemCount === 1 ? "item" : "itens"}
                   </span>
                 </Link>
               ))}

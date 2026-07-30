@@ -1,14 +1,11 @@
 import Link from "next/link";
-import { getPrisma } from "@/lib/prisma";
+import { getDB, listSpacesWithCounts } from "@/lib/db";
 import NewSpaceButton from "./NewSpaceButton";
 import SidebarSearch from "./SidebarSearch";
 
 export default async function Sidebar() {
-  const prisma = await getPrisma();
-  const spaces = await prisma.space.findMany({
-    orderBy: { createdAt: "asc" },
-    include: { _count: { select: { items: true } } },
-  });
+  const db = await getDB();
+  const spaces = await listSpacesWithCounts(db);
 
   return (
     <aside className="flex h-screen w-64 shrink-0 flex-col border-r border-[#e7ddc9] bg-[#fdfbf6] px-4 py-5">
@@ -60,7 +57,7 @@ export default async function Sidebar() {
               />
               <span className="truncate">{space.name}</span>
             </span>
-            <span className="shrink-0 text-xs text-[#a89d86]">{space._count.items}</span>
+            <span className="shrink-0 text-xs text-[#a89d86]">{space.itemCount}</span>
           </Link>
         ))}
       </div>

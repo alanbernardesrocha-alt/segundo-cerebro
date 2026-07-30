@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPrisma } from "@/lib/prisma";
+import { getDB, deleteConnection } from "@/lib/db";
 
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
-  const prisma = await getPrisma();
-  await prisma.connection.delete({ where: { id: params.id } });
+  const db = await getDB();
+  await deleteConnection(db, params.id);
   return NextResponse.json({ ok: true });
 }

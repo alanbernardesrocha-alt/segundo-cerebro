@@ -1,23 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPrisma } from "@/lib/prisma";
+import { getDB, listItems, listConnectionsAmongItems } from "@/lib/db";
 import type { GraphData, ItemType } from "@/lib/types";
 
 export async function GET(req: NextRequest) {
-  const prisma = await getPrisma();
+  const db = await getDB();
   const { searchParams } = new URL(req.url);
   const spaceId = searchParams.get("spaceId") ?? undefined;
 
-  const items = await prisma.item.findMany({
-    where: spaceId ? { spaceId } : undefined,
-    include: { space: true },
-  });
-  const itemIds = new Set(items.map((i) => i.id));
+  const items = await listItems(db, { spaceId });
+  const itemIds = items.map((i) => i.id);
+  const itemIdSet = new Set(itemIds);
 
-  const connections = await prisma.connection.findMany({
-    where: spaceId
-      ? { sourceId: { in: [...itemIds] }, targetId: { in: [...itemIds] } }
-      : undefined,
-  });
+  const connections = await listConnectionsAmongItems(db, itemIds);
 
   const data: GraphData = {
     nodes: items.map((i) => ({
@@ -29,7 +23,7 @@ export async function GET(req: NextRequest) {
       spaceColor: i.space.color,
     })),
     edges: connections
-      .filter((c) => itemIds.has(c.sourceId) && itemIds.has(c.targetId))
+      .filter((c) => itemIdSet.has(c.sourceId) && itemIdSet.has(c.targetId))
       .map((c) => ({
         id: c.id,
         source: c.sourceId,

@@ -1,23 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPrisma } from "@/lib/prisma";
+import { getDB, getItemById, updateItem, deleteItem, getItemConnectionsExpanded } from "@/lib/db";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
-  const prisma = await getPrisma();
-  const item = await prisma.item.findUnique({
-    where: { id: params.id },
-    include: {
-      space: true,
-      connectionsFrom: { include: { target: { include: { space: true } } } },
-      connectionsTo: { include: { source: { include: { space: true } } } },
-    },
-  });
+  const db = await getDB();
+  const item = await getItemById(db, params.id);
   if (!item) return NextResponse.json({ error: "Não encontrado." }, { status: 404 });
-  return NextResponse.json(item);
+  const connections = await getItemConnectionsExpanded(db, params.id);
+  return NextResponse.json({ ...item, connections });
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const prisma = await getPrisma();
+  const db = await getDB();
   const body = (await req.json()) as any;
   const data: Record<string, unknown> = {};
   if (typeof body.title === "string" && body.title.trim()) data.title = body.title.trim();
@@ -25,20 +19,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (typeof body.url === "string" || body.url === null) data.url = body.url;
   if (typeof body.spaceId === "string") data.spaceId = body.spaceId;
 
-  const item = await prisma.item.update({
-    where: { id: params.id },
-    data,
-    include: { space: true },
-  });
+  const item = await updateItem(db, params.id, data);
   return NextResponse.json(item);
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
-  const prisma = await getPrisma();
-  const item = await prisma.item.findUnique({ where: { id: params.id } });
+  const db = await getDB();
+  const item = await getItemById(db, params.id);
   if (!item) return NextResponse.json({ error: "Não encontrado." }, { status: 404 });
 
-  await prisma.item.delete({ where: { id: params.id } });
+  await deleteItem(db, params.id);
 
   if (item.filePath) {
     try {

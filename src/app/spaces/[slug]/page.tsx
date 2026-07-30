@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getPrisma } from "@/lib/prisma";
+import { getDB, getSpaceBySlug, listItems, listSpaces } from "@/lib/db";
 import ItemCard from "@/components/ItemCard";
 import NewItemButton from "@/components/NewItemButton";
 import SpaceActions from "@/components/SpaceActions";
@@ -8,17 +8,13 @@ import SpaceActions from "@/components/SpaceActions";
 export const dynamic = "force-dynamic";
 
 export default async function SpacePage({ params }: { params: { slug: string } }) {
-  const prisma = await getPrisma();
-  const space = await prisma.space.findUnique({ where: { slug: params.slug } });
+  const db = await getDB();
+  const space = await getSpaceBySlug(db, params.slug);
   if (!space) notFound();
 
   const [items, allSpaces] = await Promise.all([
-    prisma.item.findMany({
-      where: { spaceId: space.id },
-      include: { space: true },
-      orderBy: { updatedAt: "desc" },
-    }),
-    prisma.space.findMany({ orderBy: { createdAt: "asc" } }),
+    listItems(db, { spaceId: space.id }, { orderByUpdatedAt: true }),
+    listSpaces(db),
   ]);
 
   return (

@@ -1,4 +1,4 @@
-import { getPrisma } from "@/lib/prisma";
+import { getDB, searchItems } from "@/lib/db";
 import ItemCard from "@/components/ItemCard";
 
 export const dynamic = "force-dynamic";
@@ -8,22 +8,10 @@ export default async function SearchPage({
 }: {
   searchParams: { q?: string };
 }) {
-  const prisma = await getPrisma();
+  const db = await getDB();
   const q = searchParams.q?.trim() ?? "";
 
-  const items = q
-    ? await prisma.item.findMany({
-        where: {
-          OR: [
-            { title: { contains: q } },
-            { content: { contains: q } },
-            { fileName: { contains: q } },
-          ],
-        },
-        include: { space: true },
-        orderBy: { updatedAt: "desc" },
-      })
-    : [];
+  const items = q ? await searchItems(db, q, undefined, 200) : [];
 
   return (
     <div className="mx-auto max-w-5xl px-8 py-10">

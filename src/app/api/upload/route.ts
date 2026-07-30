@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPrisma } from "@/lib/prisma";
+import { getDB, createItem } from "@/lib/db";
 import path from "path";
-import crypto from "crypto";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 const MAX_SIZE = 25 * 1024 * 1024; // 25MB
 
 export async function POST(req: NextRequest) {
-  const prisma = await getPrisma();
+  const db = await getDB();
   const formData = await req.formData();
   const file = formData.get("file");
   const spaceId = String(formData.get("spaceId") ?? "");
@@ -33,18 +32,16 @@ export async function POST(req: NextRequest) {
     httpMetadata: { contentType: file.type || "application/octet-stream" },
   });
 
-  const item = await prisma.item.create({
-    data: {
-      type: "FILE",
-      title: title.trim() || file.name,
-      content: typeof description === "string" && description.trim() ? description.trim() : null,
-      spaceId,
-      fileName: file.name,
-      filePath: storedName,
-      fileSize: file.size,
-      fileMime: file.type || null,
-    },
-    include: { space: true },
+  const item = await createItem(db, {
+    type: "FILE",
+    title: title.trim() || file.name,
+    content: typeof description === "string" && description.trim() ? description.trim() : null,
+    url: null,
+    spaceId,
+    fileName: file.name,
+    filePath: storedName,
+    fileSize: file.size,
+    fileMime: file.type || null,
   });
 
   return NextResponse.json(item, { status: 201 });

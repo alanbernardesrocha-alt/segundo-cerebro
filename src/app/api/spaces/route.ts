@@ -1,18 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPrisma } from "@/lib/prisma";
+import { getDB, listSpacesWithCounts, getSpaceBySlug, createSpace } from "@/lib/db";
 import { slugify } from "@/lib/slug";
 
 export async function GET() {
-  const prisma = await getPrisma();
-  const spaces = await prisma.space.findMany({
-    orderBy: { createdAt: "asc" },
-    include: { _count: { select: { items: true } } },
-  });
+  const db = await getDB();
+  const spaces = await listSpacesWithCounts(db);
   return NextResponse.json(spaces);
 }
 
 export async function POST(req: NextRequest) {
-  const prisma = await getPrisma();
+  const db = await getDB();
   const body = (await req.json()) as any;
   const name = String(body.name ?? "").trim();
   if (!name) {
@@ -22,18 +19,16 @@ export async function POST(req: NextRequest) {
   const baseSlug = slugify(name) || "tema";
   let slug = baseSlug;
   let attempt = 1;
-  while (await prisma.space.findUnique({ where: { slug } })) {
+  while (await getSpaceBySlug(db, slug)) {
     attempt += 1;
     slug = `${baseSlug}-${attempt}`;
   }
 
-  const space = await prisma.space.create({
-    data: {
-      name,
-      slug,
-      color: body.color || "#6b6558",
-      description: body.description || null,
-    },
+  const space = await createSpace(db, {
+    name,
+    slug,
+    color: body.color || "#6b6558",
+    description: body.description || null,
   });
   return NextResponse.json(space, { status: 201 });
 }

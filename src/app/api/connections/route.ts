@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPrisma } from "@/lib/prisma";
+import { getDB, findConnectionBetween, createConnection } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
-  const prisma = await getPrisma();
+  const db = await getDB();
   const body = (await req.json()) as any;
   const sourceId = String(body.sourceId ?? "");
   const targetId = String(body.targetId ?? "");
@@ -15,21 +15,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Um item não pode se conectar a si mesmo." }, { status: 400 });
   }
 
-  const [a, b] = [sourceId, targetId].sort();
-  const existing = await prisma.connection.findFirst({
-    where: {
-      OR: [
-        { sourceId: a, targetId: b },
-        { sourceId: b, targetId: a },
-      ],
-    },
-  });
+  const existing = await findConnectionBetween(db, sourceId, targetId);
   if (existing) {
     return NextResponse.json({ error: "Esses itens já estão conectados." }, { status: 409 });
   }
 
-  const connection = await prisma.connection.create({
-    data: { sourceId, targetId, label },
-  });
+  const connection = await createConnection(db, { sourceId, targetId, label });
   return NextResponse.json(connection, { status: 201 });
 }

@@ -1,10 +1,12 @@
-import type { Connection, Item, Space } from "../generated/prisma/client";
+import type { ConnectionRow, ItemRow, SpaceRow, ItemWithSpaceRow } from "./db";
 
-export type { Connection, Item, Space };
+export type Connection = ConnectionRow;
+export type Item = ItemRow;
+export type Space = SpaceRow;
 
 export type ItemType = "NOTE" | "FILE" | "LINK";
 
-export type ItemWithSpace = Item & { space: Space };
+export type ItemWithSpace = ItemWithSpaceRow;
 
 export type GraphNode = {
   id: string;

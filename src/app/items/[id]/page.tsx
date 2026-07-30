@@ -1,38 +1,22 @@
 import { notFound } from "next/navigation";
-import { getPrisma } from "@/lib/prisma";
+import { getDB, getItemById, getSpaceById, listSpaces, getItemConnectionsExpanded } from "@/lib/db";
 import ItemDetailClient from "@/components/ItemDetailClient";
 import type { ItemType } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function ItemPage({ params }: { params: { id: string } }) {
-  const prisma = await getPrisma();
-  const [item, spaces] = await Promise.all([
-    prisma.item.findUnique({
-      where: { id: params.id },
-      include: {
-        space: true,
-        connectionsFrom: { include: { target: { include: { space: true } } } },
-        connectionsTo: { include: { source: { include: { space: true } } } },
-      },
-    }),
-    prisma.space.findMany({ orderBy: { createdAt: "asc" } }),
-  ]);
-
+  const db = await getDB();
+  const item = await getItemById(db, params.id);
   if (!item) notFound();
 
-  const connections = [
-    ...item.connectionsFrom.map((c) => ({
-      connectionId: c.id,
-      label: c.label,
-      item: c.target,
-    })),
-    ...item.connectionsTo.map((c) => ({
-      connectionId: c.id,
-      label: c.label,
-      item: c.source,
-    })),
-  ];
+  const [space, spaces, connections] = await Promise.all([
+    getSpaceById(db, item.spaceId),
+    listSpaces(db),
+    getItemConnectionsExpanded(db, item.id),
+  ]);
+
+  if (!space) notFound();
 
   return (
     <ItemDetailClient
@@ -47,10 +31,10 @@ export default async function ItemPage({ params }: { params: { id: string } }) {
         fileSize: item.fileSize,
         fileMime: item.fileMime,
         spaceId: item.spaceId,
-        createdAt: item.createdAt.toISOString(),
-        updatedAt: item.updatedAt.toISOString(),
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
       }}
-      space={item.space}
+      space={space}
       spaces={spaces}
       connections={connections.map((c) => ({
         connectionId: c.connectionId,

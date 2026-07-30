@@ -1,4 +1,4 @@
-import { getPrisma } from "@/lib/prisma";
+import { getDB, listSpaces, listItems, listConnectionsAmongItems } from "@/lib/db";
 import GraphView from "@/components/GraphView";
 import GraphFilterSelect from "@/components/GraphFilterSelect";
 import type { GraphData, ItemType } from "@/lib/types";
@@ -10,21 +10,16 @@ export default async function GraphPage({
 }: {
   searchParams: { spaceId?: string };
 }) {
-  const prisma = await getPrisma();
+  const db = await getDB();
   const spaceId = searchParams.spaceId;
 
   const [spaces, items] = await Promise.all([
-    prisma.space.findMany({ orderBy: { createdAt: "asc" } }),
-    prisma.item.findMany({
-      where: spaceId ? { spaceId } : undefined,
-      include: { space: true },
-    }),
+    listSpaces(db),
+    listItems(db, { spaceId }),
   ]);
 
-  const itemIds = new Set(items.map((i) => i.id));
-  const connections = await prisma.connection.findMany({
-    where: { sourceId: { in: [...itemIds] }, targetId: { in: [...itemIds] } },
-  });
+  const itemIds = items.map((i) => i.id);
+  const connections = await listConnectionsAmongItems(db, itemIds);
 
   const data: GraphData = {
     nodes: items.map((i) => ({

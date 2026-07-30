@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPrisma } from "@/lib/prisma";
+import { getDB, getItemById } from "@/lib/db";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
-  const prisma = await getPrisma();
-  const item = await prisma.item.findUnique({ where: { id: params.id } });
+  const db = await getDB();
+  const item = await getItemById(db, params.id);
   if (!item || !item.filePath) {
     return NextResponse.json({ error: "Arquivo não encontrado." }, { status: 404 });
   }
