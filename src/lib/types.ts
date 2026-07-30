@@ -1,4 +1,4 @@
-import type { Connection, Item, Space } from "@prisma/client";
+import type { Connection, Item, Space } from "../generated/prisma/client";
 
 export type { Connection, Item, Space };
 
