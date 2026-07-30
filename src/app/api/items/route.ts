@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const prisma = await getPrisma();
-  const body = await req.json();
+  const body = (await req.json()) as any;
   const title = String(body.title ?? "").trim();
   const spaceId = String(body.spaceId ?? "");
   const type = (body.type as ItemType) ?? "NOTE";

@@ -18,7 +18,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const prisma = await getPrisma();
-  const body = await req.json();
+  const body = (await req.json()) as any;
   const data: Record<string, unknown> = {};
   if (typeof body.title === "string" && body.title.trim()) data.title = body.title.trim();
   if (typeof body.content === "string" || body.content === null) data.content = body.content;

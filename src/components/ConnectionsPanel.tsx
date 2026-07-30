@@ -37,7 +37,7 @@ export default function ConnectionsPanel({
       const res = await fetch(
         `/api/search?q=${encodeURIComponent(query.trim())}&excludeId=${itemId}`
       );
-      if (res.ok) setResults(await res.json());
+      if (res.ok) setResults((await res.json()) as any);
     }, 250);
     return () => clearTimeout(handle);
   }, [query, itemId]);
@@ -54,7 +54,7 @@ export default function ConnectionsPanel({
     });
     setAdding(null);
     if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
+      const data = (await res.json().catch(() => ({}))) as any;
       setError(data.error || "Erro ao conectar.");
       return;
     }

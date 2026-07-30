@@ -13,7 +13,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const prisma = await getPrisma();
-  const body = await req.json();
+  const body = (await req.json()) as any;
   const name = String(body.name ?? "").trim();
   if (!name) {
     return NextResponse.json({ error: "Nome do tema é obrigatório." }, { status: 400 });

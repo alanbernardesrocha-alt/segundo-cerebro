@@ -3,7 +3,7 @@ import { getPrisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   const prisma = await getPrisma();
-  const body = await req.json();
+  const body = (await req.json()) as any;
   const sourceId = String(body.sourceId ?? "");
   const targetId = String(body.targetId ?? "");
   const label = typeof body.label === "string" && body.label.trim() ? body.label.trim() : null;

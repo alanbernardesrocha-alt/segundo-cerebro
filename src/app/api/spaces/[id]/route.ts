@@ -4,7 +4,7 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const prisma = await getPrisma();
-  const body = await req.json();
+  const body = (await req.json()) as any;
   const data: Record<string, unknown> = {};
   if (typeof body.name === "string" && body.name.trim()) data.name = body.name.trim();
   if (typeof body.color === "string") data.color = body.color;

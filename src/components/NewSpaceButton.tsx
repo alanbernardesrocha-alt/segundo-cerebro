@@ -26,11 +26,11 @@ export default function NewSpaceButton() {
     });
     setLoading(false);
     if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
+      const data = (await res.json().catch(() => ({}))) as any;
       setError(data.error || "Erro ao criar tema.");
       return;
     }
-    const space = await res.json();
+    const space = (await res.json()) as any;
     setOpen(false);
     setName("");
     setDescription("");

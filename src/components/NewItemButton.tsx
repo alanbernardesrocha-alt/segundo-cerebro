@@ -74,11 +74,11 @@ export default function NewItemButton({
 
     setLoading(false);
     if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
+      const data = (await res.json().catch(() => ({}))) as any;
       setError(data.error || "Erro ao criar item.");
       return;
     }
-    const item = await res.json();
+    const item = (await res.json()) as any;
     setOpen(false);
     reset();
     router.push(`/items/${item.id}`);
