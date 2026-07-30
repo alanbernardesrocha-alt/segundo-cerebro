@@ -1,0 +1,11 @@
+# Gabinete Cerebral
+
+Um movimento que trata a mente como espécime de gabinete de curiosidades: o cérebro catalogado com o mesmo rigor afetuoso de um herbário do século XIX, cada ideia uma folha prensada, cada conexão uma raiz desenhada a nanquim. Nasce do cruzamento entre o cartaz de feira de interior — tipografia de madeira, tinta gasta, nuvens recortadas em camadas — e a prancha científica antiga, onde anatomia e botânica se confundem porque o conhecimento, como uma planta, cresce por acúmulo silencioso.
+
+O espaço respira como papel envelhecido sob luz de lampião: fundo cor de pergaminho, nunca branco puro, sempre com o peso de décadas. A composição se organiza em torno de uma prancha central — o emblema — ladeada por margens generosas, como se o observador estivesse diante de uma página de atlas raro que merece ser virada com cuidado. Nada se apressa. Cada elemento ocupa o lugar que uma gravura ocuparia numa enciclopédia vitoriana: centrado, legendado, cercado de silêncio.
+
+A cor é terrosa e mineral: sépia de tinta velha, verde-musgo de estufa, terracota de selo de cera, latão oxidado de instrumento de navegação, carvalho escurecido pelo tempo. Nunca uma cor pura — sempre a cor como foi encontrada, já um pouco desbotada pelo sol de décadas. O contraste vem da textura, não do brilho: linho, veio da madeira, o granulado do papel de algodão.
+
+A tipografia carrega o peso do ofício manual — letras de entalhador, não de máquina. Um display rústico e cheio de caráter para o nome, ladeado por uma serifa clássica para o que é secundário, e uma variante de selo (caixa-alta, levemente espaçada) para o que funciona como carimbo ou legenda. A hierarquia nunca é gritada; é entalhada.
+
+O motivo assinatura desta peça é a fusão anatomia-botânica: um perfil de cabeça cujo interior se revela em raízes e ramos finos, como se pensamentos fossem seiva subindo um tronco. Esse motivo se repete em escala reduzida como ornamento, nunca como ilustração literal e explicada — quem entende, reconhece; quem não entende, vê apenas um selo bonito e antigo. A peça final deve parecer arrancada de um caderno de campo de um naturalista que também estudava a própria mente: cada linha desenhada à mão, cada composição resultado de um artesão no auge do ofício, nada digital, nada apressado, tudo prancha de mestre.

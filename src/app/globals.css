@@ -7,8 +7,47 @@
 }
 
 body {
-  background-color: #faf7f2;
+  background-color: #f1e6c9;
   color: #2b2620;
+  /* grão de papel sutil, feito só de gradientes — leve, sem imagem */
+  background-image:
+    radial-gradient(circle at 15% 8%, rgba(107, 74, 47, 0.05), transparent 45%),
+    radial-gradient(circle at 85% 92%, rgba(107, 74, 47, 0.06), transparent 40%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(107, 74, 47, 0.015),
+      rgba(107, 74, 47, 0.015) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  background-attachment: fixed;
+}
+
+/* títulos de página herdam o display rústico automaticamente */
+h1 {
+  font-family: '"National Park"', serif;
+  letter-spacing: 0.01em;
+}
+
+main {
+  animation: page-rise 0.5s ease-out;
+}
+
+@keyframes page-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main {
+    animation: none;
+  }
 }
 
 ::-webkit-scrollbar {
@@ -24,6 +63,71 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #c3b7a2;
+}
+
+/* ---------- Masthead / emblema ---------- */
+
+.emblem-breathe {
+  animation: emblem-breathe 5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes emblem-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.045); }
+}
+
+.nav-stamp {
+  position: relative;
+  display: block;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.4rem;
+  color: #4a3826;
+  font-family: '"Special Elite"', monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+.nav-stamp:hover {
+  background-color: rgba(197, 154, 69, 0.14);
+  color: #6b4a2f;
+}
+.nav-stamp::after {
+  content: "";
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.32rem;
+  height: 1px;
+  background: #b5482d;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s ease;
+}
+.nav-stamp:hover::after {
+  transform: scaleX(1);
+}
+
+.ledger-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-radius: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  color: #4a3826;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+.ledger-row:hover {
+  background-color: rgba(197, 154, 69, 0.14);
+  transform: translateX(2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .emblem-breathe {
+    animation: none;
+  }
 }
 
 .prose-notes {

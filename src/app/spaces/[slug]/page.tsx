@@ -37,7 +37,7 @@ export default async function SpacePage({ params }: { params: { slug: string } }
             href={`/graph?spaceId=${space.id}`}
             className="rounded-lg border border-[#e7ddc9] px-3 py-2 text-sm text-[#4a4436] hover:bg-[#f1ead9]"
           >
-            Ver grafo
+            Ver conexões
           </Link>
           <NewItemButton spaces={allSpaces} defaultSpaceId={space.id} />
           <SpaceActions space={space} />

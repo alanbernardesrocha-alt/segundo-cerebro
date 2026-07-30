@@ -45,7 +45,7 @@ export default async function GraphPage({
       <header className="mb-6 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-[#2b2620]">
-            Grafo {activeSpace ? `· ${activeSpace.name}` : "geral"}
+            Conexões neurais {activeSpace ? `· ${activeSpace.name}` : ""}
           </h1>
           <p className="mt-1 text-sm text-[#8a8270]">
             {data.nodes.length} itens · {data.edges.length} conexões. Arraste os nós para
