@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { unlink } from "fs/promises";
-import path from "path";
-import { UPLOAD_DIR } from "@/lib/uploads";
+import { getPrisma } from "@/lib/prisma";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  const prisma = await getPrisma();
   const item = await prisma.item.findUnique({
     where: { id: params.id },
     include: {
@@ -18,6 +17,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  const prisma = await getPrisma();
   const body = await req.json();
   const data: Record<string, unknown> = {};
   if (typeof body.title === "string" && body.title.trim()) data.title = body.title.trim();
@@ -34,6 +34,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+  const prisma = await getPrisma();
   const item = await prisma.item.findUnique({ where: { id: params.id } });
   if (!item) return NextResponse.json({ error: "Não encontrado." }, { status: 404 });
 
@@ -41,7 +42,8 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
 
   if (item.filePath) {
     try {
-      await unlink(path.join(UPLOAD_DIR, item.filePath));
+      const { env } = await getCloudflareContext({ async: true });
+      await env.UPLOADS.delete(item.filePath);
     } catch {
       // arquivo já pode não existir; ignora
     }

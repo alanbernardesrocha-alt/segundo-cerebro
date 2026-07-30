@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import GraphView from "@/components/GraphView";
 import GraphFilterSelect from "@/components/GraphFilterSelect";
 import type { GraphData, ItemType } from "@/lib/types";
@@ -10,6 +10,7 @@ export default async function GraphPage({
 }: {
   searchParams: { spaceId?: string };
 }) {
+  const prisma = await getPrisma();
   const spaceId = searchParams.spaceId;
 
   const [spaces, items] = await Promise.all([

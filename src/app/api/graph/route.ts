@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import type { GraphData, ItemType } from "@/lib/types";
 
 export async function GET(req: NextRequest) {
+  const prisma = await getPrisma();
   const { searchParams } = new URL(req.url);
   const spaceId = searchParams.get("spaceId") ?? undefined;
 

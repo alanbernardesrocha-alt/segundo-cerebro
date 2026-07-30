@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
 
 export async function GET() {
+  const prisma = await getPrisma();
   const spaces = await prisma.space.findMany({
     orderBy: { createdAt: "asc" },
     include: { _count: { select: { items: true } } },
@@ -11,6 +12,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const prisma = await getPrisma();
   const body = await req.json();
   const name = String(body.name ?? "").trim();
   if (!name) {

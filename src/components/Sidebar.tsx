@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import NewSpaceButton from "./NewSpaceButton";
 import SidebarSearch from "./SidebarSearch";
 
 export default async function Sidebar() {
+  const prisma = await getPrisma();
   const spaces = await prisma.space.findMany({
     orderBy: { createdAt: "asc" },
     include: { _count: { select: { items: true } } },

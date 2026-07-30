@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import ItemCard from "@/components/ItemCard";
 
 export const dynamic = "force-dynamic";
@@ -8,6 +8,7 @@ export default async function SearchPage({
 }: {
   searchParams: { q?: string };
 }) {
+  const prisma = await getPrisma();
   const q = searchParams.q?.trim() ?? "";
 
   const items = q

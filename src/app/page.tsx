@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import ItemCard from "@/components/ItemCard";
 import NewItemButton from "@/components/NewItemButton";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
+  const prisma = await getPrisma();
   const [spaces, recentItems, totalConnections] = await Promise.all([
     prisma.space.findMany({
       orderBy: { createdAt: "asc" },

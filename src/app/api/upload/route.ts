@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { mkdir, writeFile } from "fs/promises";
+import { getPrisma } from "@/lib/prisma";
 import path from "path";
 import crypto from "crypto";
-import { UPLOAD_DIR } from "@/lib/uploads";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 const MAX_SIZE = 25 * 1024 * 1024; // 25MB
 
 export async function POST(req: NextRequest) {
+  const prisma = await getPrisma();
   const formData = await req.formData();
   const file = formData.get("file");
   const spaceId = String(formData.get("spaceId") ?? "");
@@ -24,12 +24,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Arquivo excede o limite de 25MB." }, { status: 400 });
   }
 
-  await mkdir(UPLOAD_DIR, { recursive: true });
-
   const ext = path.extname(file.name);
   const storedName = `${crypto.randomUUID()}${ext}`;
   const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(UPLOAD_DIR, storedName), buffer);
+
+  const { env } = await getCloudflareContext({ async: true });
+  await env.UPLOADS.put(storedName, buffer, {
+    httpMetadata: { contentType: file.type || "application/octet-stream" },
+  });
 
   const item = await prisma.item.create({
     data: {

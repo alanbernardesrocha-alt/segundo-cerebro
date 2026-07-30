@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { unlink } from "fs/promises";
-import path from "path";
-import { UPLOAD_DIR } from "@/lib/uploads";
+import { getPrisma } from "@/lib/prisma";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  const prisma = await getPrisma();
   const body = await req.json();
   const data: Record<string, unknown> = {};
   if (typeof body.name === "string" && body.name.trim()) data.name = body.name.trim();
@@ -17,6 +16,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+  const prisma = await getPrisma();
   const items = await prisma.item.findMany({
     where: { spaceId: params.id, filePath: { not: null } },
     select: { filePath: true },
@@ -24,11 +24,12 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
 
   await prisma.space.delete({ where: { id: params.id } });
 
+  const { env } = await getCloudflareContext({ async: true });
   await Promise.all(
     items.map(async (item) => {
       if (!item.filePath) return;
       try {
-        await unlink(path.join(UPLOAD_DIR, item.filePath));
+        await env.UPLOADS.delete(item.filePath);
       } catch {
         // arquivo já pode não existir; ignora
       }

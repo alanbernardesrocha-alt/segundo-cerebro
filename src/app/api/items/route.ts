@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import type { ItemType } from "@/lib/types";
 
 export async function GET(req: NextRequest) {
+  const prisma = await getPrisma();
   const { searchParams } = new URL(req.url);
   const spaceId = searchParams.get("spaceId") ?? undefined;
   const type = searchParams.get("type") as ItemType | null;
@@ -19,6 +20,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const prisma = await getPrisma();
   const body = await req.json();
   const title = String(body.title ?? "").trim();
   const spaceId = String(body.spaceId ?? "");

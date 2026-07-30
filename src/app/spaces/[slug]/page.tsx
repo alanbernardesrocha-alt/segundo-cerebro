@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import ItemCard from "@/components/ItemCard";
 import NewItemButton from "@/components/NewItemButton";
 import SpaceActions from "@/components/SpaceActions";
@@ -8,6 +8,7 @@ import SpaceActions from "@/components/SpaceActions";
 export const dynamic = "force-dynamic";
 
 export default async function SpacePage({ params }: { params: { slug: string } }) {
+  const prisma = await getPrisma();
   const space = await prisma.space.findUnique({ where: { slug: params.slug } });
   if (!space) notFound();
 

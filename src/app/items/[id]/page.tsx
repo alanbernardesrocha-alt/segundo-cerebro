@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import ItemDetailClient from "@/components/ItemDetailClient";
 import type { ItemType } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function ItemPage({ params }: { params: { id: string } }) {
+  const prisma = await getPrisma();
   const [item, spaces] = await Promise.all([
     prisma.item.findUnique({
       where: { id: params.id },
