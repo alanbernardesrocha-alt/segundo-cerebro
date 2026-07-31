@@ -9,17 +9,9 @@
 body {
   background-color: #f1e6c9;
   color: #2b2620;
-  /* grão de papel sutil, feito só de gradientes — leve, sem imagem */
-  background-image:
-    radial-gradient(circle at 15% 8%, rgba(107, 74, 47, 0.05), transparent 45%),
-    radial-gradient(circle at 85% 92%, rgba(107, 74, 47, 0.06), transparent 40%),
-    repeating-linear-gradient(
-      0deg,
-      rgba(107, 74, 47, 0.015),
-      rgba(107, 74, 47, 0.015) 1px,
-      transparent 1px,
-      transparent 3px
-    );
+  background-image: url("/textures/paper.jpg");
+  background-repeat: repeat;
+  background-size: 512px 512px;
   background-attachment: fixed;
 }
 
@@ -77,6 +69,22 @@ main {
   50% { transform: scale(1.045); }
 }
 
+.emblem-armillary {
+  transform-origin: 130px 30px;
+  animation: armillary-spin 40s linear infinite;
+}
+@keyframes armillary-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.logo-carved {
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.55),
+    0 -1px 0 rgba(255, 232, 191, 0.25),
+    1px 2px 3px rgba(0, 0, 0, 0.5);
+}
+
 .nav-stamp {
   position: relative;
   display: block;
@@ -129,6 +137,138 @@ main {
     animation: none;
   }
 }
+
+/* ---------- Moldura de página ---------- */
+.page-frame {
+  position: relative;
+}
+.page-frame::before {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(107, 74, 47, 0.35);
+  pointer-events: none;
+}
+.page-frame::after {
+  content: "";
+  position: absolute;
+  inset: 14px;
+  border: 1px solid rgba(201, 154, 69, 0.4);
+  pointer-events: none;
+}
+
+/* ---------- Regra dupla decorativa (títulos de seção) ---------- */
+.section-rule {
+  position: relative;
+  padding-bottom: 0.6rem;
+}
+.section-rule::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 220px;
+  height: 5px;
+  background-image:
+    linear-gradient(#6b4a2f, #6b4a2f),
+    linear-gradient(#c99a45, #c99a45);
+  background-repeat: no-repeat;
+  background-size: 100% 1.5px, 60% 1.5px;
+  background-position: top left, bottom 0 left 0;
+}
+
+/* ---------- Cartões — "fichas de catálogo" ---------- */
+.card-vintage {
+  position: relative;
+  background-color: #f7efdb;
+  background-image: url("/textures/paper.jpg");
+  background-size: 420px 420px;
+  border: 1px solid rgba(107, 74, 47, 0.4);
+  box-shadow:
+    0 1px 0 rgba(107, 74, 47, 0.15),
+    2px 4px 10px rgba(43, 29, 18, 0.16);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.card-vintage::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(201, 154, 69, 0.45);
+  pointer-events: none;
+}
+.card-vintage:hover {
+  transform: translateY(-2px);
+  border-color: rgba(181, 72, 45, 0.55);
+  box-shadow:
+    0 1px 0 rgba(107, 74, 47, 0.18),
+    4px 8px 16px rgba(43, 29, 18, 0.22);
+}
+
+/* ---------- Botões estilo carimbo / selo de cera ---------- */
+.btn-stamp {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.1rem;
+  background-color: #b5482d;
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.18));
+  color: #f7efdb;
+  border: 1px solid #7a2f1c;
+  border-radius: 3px;
+  font-family: '"Special Elite"', monospace;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 0 #7a2f1c, 2px 4px 8px rgba(43, 29, 18, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.btn-stamp:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 0 #7a2f1c, 3px 6px 10px rgba(43, 29, 18, 0.4);
+}
+.btn-stamp:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 #7a2f1c, 1px 2px 4px rgba(43, 29, 18, 0.3);
+}
+.btn-stamp-moss {
+  background-color: #3e6259;
+  border-color: #23392f;
+  box-shadow: 0 2px 0 #23392f, 2px 4px 8px rgba(43, 29, 18, 0.35);
+}
+.btn-stamp-moss:hover {
+  box-shadow: 0 3px 0 #23392f, 3px 6px 10px rgba(43, 29, 18, 0.4);
+}
+.btn-stamp-outline {
+  background-color: transparent;
+  background-image: none;
+  color: #6b4a2f;
+  border: 1.5px solid #6b4a2f;
+  box-shadow: none;
+}
+.btn-stamp-outline:hover {
+  background-color: rgba(107, 74, 47, 0.08);
+  transform: none;
+  box-shadow: none;
+}
+
+/* ---------- Etiquetas de tipo (NOTE / FILE / LINK) ---------- */
+.type-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.12rem 0.5rem;
+  border-radius: 2px;
+  font-family: '"Special Elite"', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+}
+.type-tag-note { color: #3e6259; background: rgba(62, 98, 89, 0.1); }
+.type-tag-file { color: #8a6f3f; background: rgba(201, 154, 69, 0.14); }
+.type-tag-link { color: #b5482d; background: rgba(181, 72, 45, 0.1); }
 
 .prose-notes {
   line-height: 1.7;

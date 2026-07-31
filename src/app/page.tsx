@@ -17,11 +17,11 @@ export default async function DashboardPage() {
   const totalItems = spaces.reduce((sum, s) => sum + s.itemCount, 0);
 
   return (
-    <div className="mx-auto max-w-5xl px-8 py-10">
+    <div className="page-frame mx-auto max-w-5xl px-8 py-10">
       <header className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-[#2b2620]">Seu segundo cérebro</h1>
-          <p className="mt-1 text-sm text-[#8a8270]">
+          <h1 className="text-3xl font-bold text-[#2b2620]">Seu segundo cérebro</h1>
+          <p className="mt-1 font-stamp text-xs tracking-wide text-[#8a6f3f]">
             {totalItems} {totalItems === 1 ? "item" : "itens"} · {spaces.length}{" "}
             {spaces.length === 1 ? "tema" : "temas"} · {totalConnections}{" "}
             {totalConnections === 1 ? "conexão" : "conexões"}
@@ -31,8 +31,8 @@ export default async function DashboardPage() {
       </header>
 
       {spaces.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-[#e7ddc9] bg-white/60 px-6 py-10 text-center">
-          <p className="text-sm text-[#6b6558]">
+        <div className="card-vintage rounded-sm border-dashed px-6 py-10 text-center">
+          <p className="text-sm text-[#6b5c47]">
             Comece criando um tema na barra lateral (ex: "Filosofia", "Projetos", "Saúde") para
             organizar suas anotações e referências.
           </p>
@@ -40,27 +40,27 @@ export default async function DashboardPage() {
       ) : (
         <>
           <section className="mb-10">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[#9b9280]">
-              Temas
+            <h2 className="section-rule mb-4 font-stamp text-xs tracking-[0.15em] text-[#8a6f3f]">
+              TEMAS
             </h2>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
               {spaces.map((space) => (
                 <Link
                   key={space.id}
                   href={`/spaces/${space.slug}`}
-                  className="flex flex-col gap-2 rounded-xl border border-[#e7ddc9] bg-white px-4 py-4 transition hover:border-[#c3b7a2] hover:shadow-sm"
+                  className="card-vintage flex flex-col gap-2 rounded-sm px-4 py-4"
                 >
                   <span className="flex items-center gap-2">
                     <span
-                      className="h-3 w-3 rounded-full"
+                      className="h-3 w-3 rounded-full border border-[#6B4A2F]/30"
                       style={{ backgroundColor: space.color }}
                     />
-                    <span className="font-medium text-[#2b2620]">{space.name}</span>
+                    <span className="font-serif font-bold text-[#2b2620]">{space.name}</span>
                   </span>
                   {space.description && (
-                    <p className="line-clamp-2 text-xs text-[#8a8270]">{space.description}</p>
+                    <p className="line-clamp-2 text-xs text-[#6b5c47]">{space.description}</p>
                   )}
-                  <span className="text-xs text-[#a89d86]">
+                  <span className="font-stamp text-[10px] text-[#8a6f3f]">
                     {space.itemCount} {space.itemCount === 1 ? "item" : "itens"}
                   </span>
                 </Link>
@@ -69,8 +69,8 @@ export default async function DashboardPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[#9b9280]">
-              Atividade recente
+            <h2 className="section-rule mb-4 font-stamp text-xs tracking-[0.15em] text-[#8a6f3f]">
+              ATIVIDADE RECENTE
             </h2>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {recentItems.map((item) => (

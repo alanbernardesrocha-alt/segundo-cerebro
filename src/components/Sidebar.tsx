@@ -3,10 +3,26 @@ import { getDB, listSpacesWithCounts } from "@/lib/db";
 import NewSpaceButton from "./NewSpaceButton";
 import SidebarSearch from "./SidebarSearch";
 
-/** Emblema: perfil de cabeça cujas raízes viram ramos — o selo do Segundo Cérebro. */
+/** Emblema: perfil de cabeça cujas raízes viram ramos, envolto por anéis armilares — o selo do Segundo Cérebro. */
 function Emblem({ className = "" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 260 300" className={className} fill="none">
+    <svg viewBox="-40 -170 340 400" className={className} fill="none">
+      {/* anéis armilares — eco da esfera astronômica da referência */}
+      <g className="emblem-armillary">
+        <ellipse
+          cx="130" cy="30" rx="150" ry="60"
+          stroke="#C99A45" strokeWidth="2" opacity="0.85"
+          transform="rotate(-18 130 30)"
+        />
+        <ellipse
+          cx="130" cy="30" rx="150" ry="60"
+          stroke="#B5482D" strokeWidth="1.4" opacity="0.7"
+          transform="rotate(24 130 30)"
+          strokeDasharray="2 5"
+        />
+        <circle cx="130" cy="30" r="168" stroke="#C99A45" strokeWidth="1" opacity="0.35" />
+      </g>
+
       <g stroke="#F1E6C9" strokeWidth="4.5" strokeLinejoin="round" strokeLinecap="round">
         <path d="M60,230 C60,150 75,90 100,55 L225,55 C230,120 230,180 220,230 Z" />
         <path
@@ -51,37 +67,68 @@ function Emblem({ className = "" }: { className?: string }) {
   );
 }
 
+/** Divisor recortado tipo nuvem/escama — a transição da madeira para o pergaminho. */
+function ScallopDivider() {
+  return (
+    <svg
+      viewBox="0 0 256 40"
+      preserveAspectRatio="none"
+      className="block h-6 w-full"
+      aria-hidden
+    >
+      <path
+        d="M0,24 Q16,2 32,24 Q48,2 64,24 Q80,2 96,24 Q112,2 128,24 Q144,2 160,24 Q176,2 192,24 Q208,2 224,24 Q240,2 256,24 L256,40 L0,40 Z"
+        fill="#F1E6C9"
+      />
+      <path
+        d="M0,24 Q16,2 32,24 Q48,2 64,24 Q80,2 96,24 Q112,2 128,24 Q144,2 160,24 Q176,2 192,24 Q208,2 224,24 Q240,2 256,24"
+        fill="none"
+        stroke="#C99A45"
+        strokeWidth="1.2"
+        opacity="0.8"
+      />
+    </svg>
+  );
+}
+
 export default async function Sidebar() {
   const db = await getDB();
   const spaces = await listSpacesWithCounts(db);
 
   return (
     <aside className="flex h-screen w-64 shrink-0 flex-col overflow-hidden border-r border-[#c9a35f]/40 bg-[#f1e6c9]">
-      {/* Masthead — a "tábua de madeira" com o brasão */}
-      <Link
-        href="/"
-        className="group relative flex flex-col items-center gap-2 overflow-hidden px-4 pb-5 pt-6"
-        style={{
-          background: "linear-gradient(180deg, #3B2A1A 0%, #2B1D12 60%, #1E140C 100%)",
-        }}
-      >
-        <span className="pointer-events-none absolute inset-2 rounded-sm border border-[#C99A45]/40" />
-        <span className="relative flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#C99A45] bg-[#2B1D12] shadow-inner">
-          <Emblem className="h-11 w-11 emblem-breathe" />
-        </span>
-        <span className="relative font-display text-xl font-bold tracking-wide text-[#F1E6C9]">
-          Segundo Cérebro
-        </span>
-        <span className="relative font-stamp text-[10px] tracking-[0.25em] text-[#C99A45]">
-          DE ALAN BERNARDES
-        </span>
-        <span
-          className="relative mt-1 h-px w-24 origin-center scale-x-0 bg-[#C99A45] transition-transform duration-700 group-hover:scale-x-100"
-          aria-hidden
-        />
-      </Link>
+      {/* Masthead — tábua de madeira de verdade com o brasão */}
+      <div className="relative">
+        <Link
+          href="/"
+          className="group relative flex flex-col items-center gap-2 overflow-hidden px-4 pb-8 pt-6"
+          style={{
+            backgroundImage:
+              "linear-gradient(180deg, rgba(30,20,12,0.35), rgba(30,20,12,0.75)), url('/textures/wood.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          <span className="pointer-events-none absolute inset-2 rounded-sm border border-[#C99A45]/50" />
+          <span className="pointer-events-none absolute inset-[6px] rounded-sm border border-[#C99A45]/20" />
+          <span className="relative flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#C99A45] bg-[#2B1D12] shadow-[0_0_0_3px_rgba(0,0,0,0.35)]">
+            <Emblem className="h-11 w-11 emblem-breathe" />
+          </span>
+          <span className="relative font-display text-2xl font-bold tracking-wide text-[#F6ECD4] logo-carved">
+            Segundo Cérebro
+          </span>
+          <span className="relative font-stamp text-[10px] tracking-[0.3em] text-[#C99A45]">
+            DE ALAN BERNARDES
+          </span>
+          <span
+            className="relative mt-1 h-px w-24 origin-center scale-x-0 bg-[#C99A45] transition-transform duration-700 group-hover:scale-x-100"
+            aria-hidden
+          />
+        </Link>
+        <ScallopDivider />
+      </div>
 
-      <div className="flex flex-1 flex-col overflow-hidden px-4 py-4">
+      <div className="flex flex-1 flex-col overflow-hidden px-4 pb-4 pt-1">
         <SidebarSearch />
 
         <nav className="mt-4 flex flex-col gap-0.5 text-sm">
@@ -95,7 +142,7 @@ export default async function Sidebar() {
 
         <div className="mt-6 flex items-center justify-between px-1">
           <span className="font-stamp text-[11px] tracking-[0.2em] text-[#8a6f3f]">
-            Temas
+            ✦ Temas
           </span>
           <NewSpaceButton />
         </div>

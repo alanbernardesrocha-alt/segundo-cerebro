@@ -42,7 +42,7 @@ export default function NewSpaceButton() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="rounded-full px-2 py-1 text-sm text-[#8a5a2b] hover:bg-[#f1ead9]"
+        className="flex h-6 w-6 items-center justify-center rounded-full border border-[#6B4A2F]/40 text-sm text-[#6B4A2F] transition hover:bg-[#c99a45]/20"
         aria-label="Novo tema"
         title="Novo tema"
       >
@@ -94,7 +94,7 @@ export default function NewSpaceButton() {
             <button
               type="submit"
               disabled={loading || !name.trim()}
-              className="mt-1 rounded-lg bg-[#2b2620] px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+              className="btn-stamp mt-1 w-fit disabled:opacity-50"
             >
               {loading ? "Criando..." : "Criar tema"}
             </button>

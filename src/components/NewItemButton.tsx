@@ -89,7 +89,7 @@ export default function NewItemButton({
     <>
       <button
         onClick={() => setOpen(true)}
-        className="rounded-lg bg-[#2b2620] px-3 py-2 text-sm font-medium text-white hover:bg-[#40392f]"
+        className="btn-stamp"
       >
         {label}
       </button>
@@ -194,7 +194,7 @@ export default function NewItemButton({
             <button
               type="submit"
               disabled={loading || !spaceId}
-              className="mt-1 rounded-lg bg-[#2b2620] px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+              className="btn-stamp btn-stamp-moss mt-1 w-fit disabled:opacity-50"
             >
               {loading ? "Salvando..." : "Salvar"}
             </button>

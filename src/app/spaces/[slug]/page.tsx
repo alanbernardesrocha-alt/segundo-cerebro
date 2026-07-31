@@ -18,25 +18,25 @@ export default async function SpacePage({ params }: { params: { slug: string } }
   ]);
 
   return (
-    <div className="mx-auto max-w-5xl px-8 py-10">
+    <div className="page-frame mx-auto max-w-5xl px-8 py-10">
       <header className="mb-8 flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: space.color }} />
-            <h1 className="text-2xl font-semibold text-[#2b2620]">{space.name}</h1>
+            <span
+              className="h-3 w-3 rounded-full border border-[#6B4A2F]/30"
+              style={{ backgroundColor: space.color }}
+            />
+            <h1 className="text-3xl font-bold text-[#2b2620]">{space.name}</h1>
           </div>
           {space.description && (
-            <p className="mt-1 max-w-xl text-sm text-[#8a8270]">{space.description}</p>
+            <p className="mt-1 max-w-xl text-sm text-[#6b5c47]">{space.description}</p>
           )}
-          <p className="mt-1 text-sm text-[#a89d86]">
+          <p className="mt-1 font-stamp text-xs text-[#8a6f3f]">
             {items.length} {items.length === 1 ? "item" : "itens"}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Link
-            href={`/graph?spaceId=${space.id}`}
-            className="rounded-lg border border-[#e7ddc9] px-3 py-2 text-sm text-[#4a4436] hover:bg-[#f1ead9]"
-          >
+          <Link href={`/graph?spaceId=${space.id}`} className="btn-stamp btn-stamp-outline">
             Ver conexões
           </Link>
           <NewItemButton spaces={allSpaces} defaultSpaceId={space.id} />
@@ -45,8 +45,8 @@ export default async function SpacePage({ params }: { params: { slug: string } }
       </header>
 
       {items.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-[#e7ddc9] bg-white/60 px-6 py-10 text-center">
-          <p className="text-sm text-[#6b6558]">
+        <div className="card-vintage rounded-sm border-dashed px-6 py-10 text-center">
+          <p className="text-sm text-[#6b5c47]">
             Nenhum item neste tema ainda. Adicione uma anotação, um link ou um arquivo.
           </p>
         </div>

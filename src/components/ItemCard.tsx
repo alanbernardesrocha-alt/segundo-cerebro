@@ -7,6 +7,12 @@ const TYPE_ICON: Record<string, string> = {
   LINK: "🔗",
 };
 
+const TYPE_TAG_CLASS: Record<string, string> = {
+  NOTE: "type-tag-note",
+  FILE: "type-tag-file",
+  LINK: "type-tag-link",
+};
+
 function formatDate(d: Date | string) {
   return new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 }
@@ -28,20 +34,20 @@ export default function ItemCard({
   return (
     <Link
       href={`/items/${item.id}`}
-      className="flex flex-col gap-1.5 rounded-xl border border-[#e7ddc9] bg-white px-4 py-3 transition hover:border-[#c3b7a2] hover:shadow-sm"
+      className="card-vintage flex flex-col gap-1.5 rounded-sm px-4 py-3"
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-[#2b2620]">
+        <span className="flex min-w-0 items-center gap-1.5 font-serif text-sm font-bold text-[#2b2620]">
           <span>{TYPE_ICON[item.type]}</span>
           <span className="truncate">{item.title}</span>
         </span>
-        <span className="shrink-0 text-xs text-[#a89d86]">{formatDate(item.updatedAt)}</span>
+        <span className="shrink-0 font-stamp text-[10px] text-[#8a6f3f]">
+          {formatDate(item.updatedAt)}
+        </span>
       </div>
-      {preview && (
-        <p className="truncate text-xs text-[#8a8270]">{preview}</p>
-      )}
+      {preview && <p className="truncate text-xs text-[#6b5c47]">{preview}</p>}
       {showSpace && (
-        <span className="flex w-fit items-center gap-1.5 rounded-full bg-[#f1ead9] px-2 py-0.5 text-[11px] text-[#6b6558]">
+        <span className="flex w-fit items-center gap-1.5 rounded-full border border-[#6B4A2F]/25 bg-[#efe4c9] px-2 py-0.5 text-[11px] text-[#6b5c47]">
           <span
             className="h-1.5 w-1.5 rounded-full"
             style={{ backgroundColor: item.space.color }}
@@ -49,7 +55,7 @@ export default function ItemCard({
           {item.space.name}
         </span>
       )}
-      <span className="text-[11px] uppercase tracking-wide text-[#c3b7a2]">
+      <span className={`type-tag w-fit ${TYPE_TAG_CLASS[item.type]}`}>
         {ITEM_TYPE_LABEL[item.type]}
       </span>
     </Link>
