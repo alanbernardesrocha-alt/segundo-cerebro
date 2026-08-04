@@ -5,7 +5,7 @@ import "./globals.css";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Segundo Cérebro",
+  title: "Segundo cérebro de Alan",
   description: "Suas anotações e referências, conectadas.",
 };
 

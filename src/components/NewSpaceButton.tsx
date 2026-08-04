@@ -4,7 +4,16 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Modal from "./Modal";
 
-const COLORS = ["#8a5a2b", "#5a7d5a", "#4a6fa5", "#a54a6f", "#9b7a3a", "#6b6558"];
+// Paleta ampliada do Gabinete Cerebral (vintage, além do marrom)
+const COLORS = [
+  "#b5482d", // terracota
+  "#3e6259", // musgo
+  "#834d5e", // ameixa
+  "#46617e", // azul-aço
+  "#c99a45", // latão
+  "#74743e", // oliva
+  "#6b4a2f", // sépia
+];
 
 export default function NewSpaceButton() {
   const router = useRouter();
@@ -52,38 +61,45 @@ export default function NewSpaceButton() {
         <Modal title="Novo tema" onClose={() => setOpen(false)}>
           <form onSubmit={submit} className="flex flex-col gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-[#6b6558]">Nome</label>
+              <label className="mb-1 block font-stamp text-[10px] uppercase tracking-[0.1em] text-[#8a6f3f]">
+                Nome
+              </label>
               <input
                 autoFocus
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ex: Filosofia, Projetos, Saúde..."
-                className="w-full rounded-lg border border-[#e7ddc9] bg-white px-3 py-2 text-sm outline-none focus:border-[#8a5a2b]"
+                className="w-full rounded-sm border border-[#6B4A2F]/40 bg-[#fffdf6] px-3 py-2 text-sm outline-none focus:border-[#c99a45] focus:shadow-[0_0_0_2px_rgba(201,154,69,0.2)]"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-[#6b6558]">
+              <label className="mb-1 block font-stamp text-[10px] uppercase tracking-[0.1em] text-[#8a6f3f]">
                 Descrição (opcional)
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={2}
-                className="w-full resize-none rounded-lg border border-[#e7ddc9] bg-white px-3 py-2 text-sm outline-none focus:border-[#8a5a2b]"
+                className="w-full resize-none rounded-sm border border-[#6B4A2F]/40 bg-[#fffdf6] px-3 py-2 text-sm outline-none focus:border-[#c99a45] focus:shadow-[0_0_0_2px_rgba(201,154,69,0.2)]"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-[#6b6558]">Cor</label>
-              <div className="flex gap-2">
+              <label className="mb-1 block font-stamp text-[10px] uppercase tracking-[0.1em] text-[#8a6f3f]">
+                Cor
+              </label>
+              <div className="flex gap-2.5">
                 {COLORS.map((c) => (
                   <button
                     type="button"
                     key={c}
                     onClick={() => setColor(c)}
-                    className="h-6 w-6 rounded-full ring-offset-2"
+                    className="h-6 w-6 rounded-full transition"
                     style={{
                       backgroundColor: c,
-                      boxShadow: color === c ? `0 0 0 2px ${c}` : undefined,
+                      boxShadow:
+                        color === c
+                          ? `0 0 0 2px #fdf8ec, 0 0 0 4px ${c}`
+                          : "0 0 0 1px rgba(107,74,47,0.25)",
                     }}
                     aria-label={c}
                   />
