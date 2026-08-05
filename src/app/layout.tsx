@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
+import { SidebarProvider } from "@/components/SidebarContext";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
@@ -21,10 +23,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="font-sans">
-        <div className="flex min-h-screen">
-          <Sidebar />
-          <main className="min-w-0 flex-1">{children}</main>
-        </div>
+        <SidebarProvider>
+          <div className="flex min-h-screen flex-col">
+            <Header />
+            <div className="flex min-w-0 flex-1">
+              <Sidebar />
+              <main className="min-w-0 flex-1">{children}</main>
+            </div>
+          </div>
+        </SidebarProvider>
       </body>
     </html>
   );

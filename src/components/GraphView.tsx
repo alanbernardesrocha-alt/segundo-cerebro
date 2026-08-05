@@ -3,28 +3,34 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  forceCenter,
   forceCollide,
   forceLink,
   forceManyBody,
   forceSimulation,
+  forceX,
+  forceY,
 } from "d3-force";
 import type { GraphData } from "@/lib/types";
 
 const WIDTH = 900;
-const HEIGHT = 560;
+const HEIGHT = 620;
+const PAD = 48; // margem interna: os nós nunca encostam na borda
 
 type SimNode = {
   id: string;
+  kind: "hub" | "item";
   title: string;
-  type: string;
+  type?: string;
   spaceName: string;
-  spaceColor: string;
+  color: string;
+  r: number;
   x: number;
   y: number;
 };
 
 const TYPE_ICON: Record<string, string> = { NOTE: "📝", FILE: "📎", LINK: "🔗" };
+const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+const hubId = (space: string) => `hub:${space}`;
 
 export default function GraphView({ data }: { data: GraphData }) {
   const router = useRouter();
@@ -39,71 +45,112 @@ export default function GraphView({ data }: { data: GraphData }) {
       setNodes([]);
       return;
     }
-    const simNodes: SimNode[] = data.nodes.map((n, i) => ({
-      ...n,
-      x: WIDTH / 2 + Math.cos(i) * 120 + (Math.random() - 0.5) * 60,
-      y: HEIGHT / 2 + Math.sin(i) * 120 + (Math.random() - 0.5) * 60,
-    }));
-    const simLinks = data.edges.map((e) => ({ ...e, source: e.source, target: e.target }));
 
-    const simulation = forceSimulation(simNodes as unknown as { x: number; y: number }[])
-      .force("charge", forceManyBody().strength(-260))
+    // 1) um nó-tema (hub) por espaço + os itens
+    const colorBySpace = new Map<string, string>();
+    for (const n of data.nodes) {
+      if (!colorBySpace.has(n.spaceName)) colorBySpace.set(n.spaceName, n.spaceColor);
+    }
+    const spaceNames = [...colorBySpace.keys()];
+
+    const hubs: SimNode[] = spaceNames.map((name, i) => {
+      const a = (i / Math.max(1, spaceNames.length)) * Math.PI * 2;
+      return {
+        id: hubId(name),
+        kind: "hub",
+        title: name,
+        spaceName: name,
+        color: colorBySpace.get(name) || "#6b4a2f",
+        r: 27,
+        x: WIDTH / 2 + Math.cos(a) * 190,
+        y: HEIGHT / 2 + Math.sin(a) * 140,
+      };
+    });
+
+    const items: SimNode[] = data.nodes.map((n, i) => {
+      const a = i * 2.399;
+      return {
+        id: n.id,
+        kind: "item",
+        title: n.title,
+        type: n.type,
+        spaceName: n.spaceName,
+        color: n.spaceColor,
+        r: 18,
+        x: WIDTH / 2 + Math.cos(a) * 100 + (Math.random() - 0.5) * 40,
+        y: HEIGHT / 2 + Math.sin(a) * 100 + (Math.random() - 0.5) * 40,
+      };
+    });
+
+    const simNodes = [...hubs, ...items];
+
+    // 2) ligações: cada item se liga ao seu tema (raio) + conexões confirmadas (item–item)
+    const spokeLinks = data.nodes.map((n) => ({
+      source: n.id,
+      target: hubId(n.spaceName),
+      kind: "spoke" as const,
+    }));
+    const confirmedLinks = data.edges.map((e) => ({
+      source: e.source,
+      target: e.target,
+      kind: "edge" as const,
+    }));
+    const links = [...spokeLinks, ...confirmedLinks];
+
+    const simulation = forceSimulation(simNodes as never[])
       .force(
         "link",
-        forceLink(simLinks as never[])
+        forceLink(links as never[])
           .id((d) => (d as unknown as SimNode).id)
-          .distance(100)
+          .distance((l) => ((l as { kind: string }).kind === "spoke" ? 88 : 130))
+          .strength((l) => ((l as { kind: string }).kind === "spoke" ? 0.85 : 0.35))
       )
-      .force("center", forceCenter(WIDTH / 2, HEIGHT / 2))
-      .force("collide", forceCollide(38))
+      .force("charge", forceManyBody().strength(-280))
+      .force("collide", forceCollide((d) => (d as unknown as SimNode).r + 16))
+      .force("x", forceX(WIDTH / 2).strength(0.05))
+      .force("y", forceY(HEIGHT / 2).strength(0.08))
       .stop();
 
-    for (let i = 0; i < 300; i++) simulation.tick();
-    setNodes([...simNodes]);
+    for (let i = 0; i < 440; i++) simulation.tick();
+
+    // 3) trava tudo dentro do quadro — nada escapa da moldura
+    for (const n of simNodes) {
+      n.x = clamp(n.x, PAD, WIDTH - PAD);
+      n.y = clamp(n.y, PAD, HEIGHT - PAD);
+    }
+    setNodes(simNodes);
   }, [data]);
 
   const nodeById = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes]);
 
-  // Conexões sugeridas automaticamente: itens do MESMO tema que ainda não estão ligados.
-  // Ligamos em cadeia (não todos-com-todos) para o mapa não virar um emaranhado.
-  const autoEdges = useMemo(() => {
-    const confirmed = new Set(
-      data.edges.map((e) => [e.source, e.target].sort().join("::"))
-    );
-    const bySpace = new Map<string, string[]>();
-    for (const n of data.nodes) {
-      const arr = bySpace.get(n.spaceName) ?? [];
-      arr.push(n.id);
-      bySpace.set(n.spaceName, arr);
-    }
-    const auto: { id: string; source: string; target: string }[] = [];
-    for (const ids of bySpace.values()) {
-      for (let i = 0; i < ids.length - 1; i++) {
-        const a = ids[i];
-        const b = ids[i + 1];
-        const key = [a, b].sort().join("::");
-        if (!confirmed.has(key)) {
-          auto.push({ id: `auto-${key}`, source: a, target: b });
-        }
-      }
-    }
-    return auto;
-  }, [data]);
+  const spokes = useMemo(
+    () => data.nodes.map((n) => ({ id: `sp-${n.id}`, item: n.id, hub: hubId(n.spaceName) })),
+    [data]
+  );
 
+  function toLocal(e: React.PointerEvent<SVGSVGElement>) {
+    const rect = svgRef.current!.getBoundingClientRect();
+    return {
+      x: ((e.clientX - rect.left) / rect.width) * WIDTH,
+      y: ((e.clientY - rect.top) / rect.height) * HEIGHT,
+    };
+  }
   function onPointerDown(id: string) {
     dragId.current = id;
     dragMoved.current = false;
   }
-
   function onPointerMove(e: React.PointerEvent<SVGSVGElement>) {
     if (!dragId.current || !svgRef.current) return;
     dragMoved.current = true;
-    const rect = svgRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * WIDTH;
-    const y = ((e.clientY - rect.top) / rect.height) * HEIGHT;
-    setNodes((prev) => prev.map((n) => (n.id === dragId.current ? { ...n, x, y } : n)));
+    const { x, y } = toLocal(e);
+    setNodes((prev) =>
+      prev.map((n) =>
+        n.id === dragId.current
+          ? { ...n, x: clamp(x, PAD, WIDTH - PAD), y: clamp(y, PAD, HEIGHT - PAD) }
+          : n
+      )
+    );
   }
-
   function onPointerUp() {
     dragId.current = null;
   }
@@ -125,54 +172,52 @@ export default function GraphView({ data }: { data: GraphData }) {
       <div className="mb-3 flex flex-wrap items-center gap-4 px-1">
         <span className="flex items-center gap-2 font-stamp text-[10px] text-[#6b5c47]">
           <svg width="26" height="8">
-            <line x1="0" y1="4" x2="26" y2="4" stroke="#6b4a2f" strokeWidth="1.6" opacity="0.6" />
+            <line x1="0" y1="4" x2="26" y2="4" stroke="#8a6f3f" strokeWidth="1.8" opacity="0.7" />
           </svg>
-          conexão
+          liga ao tema
         </span>
         <span className="flex items-center gap-2 font-stamp text-[10px] text-[#6b5c47]">
           <svg width="26" height="8">
-            <line
-              x1="0"
-              y1="4"
-              x2="26"
-              y2="4"
-              stroke="#c99a45"
-              strokeWidth="1.6"
-              strokeDasharray="4 4"
-            />
+            <line x1="0" y1="4" x2="26" y2="4" stroke="#6b4a2f" strokeWidth="2" opacity="0.7" />
           </svg>
-          sugerida (automática)
+          conexão entre itens
         </span>
       </div>
 
-      <div className="overflow-hidden border border-[#6B4A2F]/40 bg-[#fffdf6] shadow-[inset_0_0_0_1px_rgba(201,154,69,0.35)]">
+      <div
+        className="overflow-hidden border border-[#6B4A2F]/40 bg-[#fffdf6] shadow-[inset_0_0_0_1px_rgba(201,154,69,0.35)]"
+        style={{ width: "100%", aspectRatio: `${WIDTH} / ${HEIGHT}`, maxHeight: "72vh" }}
+      >
         <svg
           ref={svgRef}
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-          className="w-full touch-none"
-          style={{ height: HEIGHT }}
+          preserveAspectRatio="xMidYMid meet"
+          className="h-full w-full touch-none"
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerLeave={onPointerUp}
         >
-          {/* arestas sugeridas automaticamente (tracejado dourado marchando) */}
-          {autoEdges.map((edge) => {
-            const s = nodeById.get(edge.source);
-            const t = nodeById.get(edge.target);
+          {/* raios: item → tema (tingidos pela cor do tema) */}
+          {spokes.map((sp) => {
+            const s = nodeById.get(sp.item);
+            const t = nodeById.get(sp.hub);
             if (!s || !t) return null;
+            const hot = hoveredId === sp.item || hoveredId === sp.hub;
             return (
               <line
-                key={edge.id}
-                className="graph-auto-edge"
+                key={sp.id}
                 x1={s.x}
                 y1={s.y}
                 x2={t.x}
                 y2={t.y}
+                stroke={t.color}
+                strokeWidth={hot ? 2.6 : 1.5}
+                opacity={hot ? 0.85 : 0.4}
               />
             );
           })}
 
-          {/* arestas confirmadas */}
+          {/* conexões confirmadas entre itens */}
           {data.edges.map((edge) => {
             const s = nodeById.get(edge.source);
             const t = nodeById.get(edge.target);
@@ -186,53 +231,90 @@ export default function GraphView({ data }: { data: GraphData }) {
                 x2={t.x}
                 y2={t.y}
                 stroke="#6b4a2f"
-                strokeWidth={hot ? 2.4 : 1.6}
-                opacity={hot ? 0.85 : 0.5}
+                strokeWidth={hot ? 2.8 : 1.8}
+                opacity={hot ? 0.9 : 0.55}
               />
             );
           })}
 
-          {nodes.map((node, i) => (
-            <g
-              key={node.id}
-              className="graph-node"
-              transform={`translate(${node.x},${node.y})`}
-              onPointerDown={() => onPointerDown(node.id)}
-              onPointerEnter={() => setHoveredId(node.id)}
-              onPointerLeave={() => setHoveredId((h) => (h === node.id ? null : h))}
-              onClick={() => {
-                if (!dragMoved.current) router.push(`/items/${node.id}`);
-              }}
-            >
+          {/* nós-tema (hubs) */}
+          {nodes
+            .filter((n) => n.kind === "hub")
+            .map((node) => (
               <g
-                className="graph-float"
-                style={{
-                  animationDuration: `${4.4 + (i % 3) * 0.7}s`,
-                  animationDelay: `${(i % 7) * 0.37}s`,
-                }}
+                key={node.id}
+                className="graph-node"
+                transform={`translate(${node.x},${node.y})`}
+                onPointerDown={() => onPointerDown(node.id)}
+                onPointerEnter={() => setHoveredId(node.id)}
+                onPointerLeave={() => setHoveredId((h) => (h === node.id ? null : h))}
               >
-                <circle r={18} fill={node.spaceColor} stroke="#f7f0de" strokeWidth={2.5} />
+                <circle r={node.r + 5} fill={node.color} opacity={0.14} />
+                <circle
+                  r={node.r}
+                  fill="#fffdf6"
+                  stroke={node.color}
+                  strokeWidth={3}
+                />
+                <circle r={node.r - 8} fill={node.color} opacity={0.85} />
                 <text
+                  y={node.r + 17}
                   textAnchor="middle"
-                  dominantBaseline="central"
-                  fontSize={14}
-                  style={{ pointerEvents: "none" }}
-                >
-                  {TYPE_ICON[node.type]}
-                </text>
-                <text
-                  y={34}
-                  textAnchor="middle"
-                  fontSize={11}
-                  fill="#4a4436"
+                  fontSize={12}
+                  fontWeight={700}
+                  fill="#3a332a"
                   fontFamily="'Libre Baskerville', serif"
                   style={{ pointerEvents: "none" }}
                 >
-                  {node.title.length > 18 ? `${node.title.slice(0, 18)}…` : node.title}
+                  {node.title.length > 20 ? `${node.title.slice(0, 20)}…` : node.title}
                 </text>
               </g>
-            </g>
-          ))}
+            ))}
+
+          {/* nós-item */}
+          {nodes
+            .filter((n) => n.kind === "item")
+            .map((node, i) => (
+              <g
+                key={node.id}
+                className="graph-node"
+                transform={`translate(${node.x},${node.y})`}
+                onPointerDown={() => onPointerDown(node.id)}
+                onPointerEnter={() => setHoveredId(node.id)}
+                onPointerLeave={() => setHoveredId((h) => (h === node.id ? null : h))}
+                onClick={() => {
+                  if (!dragMoved.current) router.push(`/items/${node.id}`);
+                }}
+              >
+                <g
+                  className="graph-float"
+                  style={{
+                    animationDuration: `${4.4 + (i % 3) * 0.7}s`,
+                    animationDelay: `${(i % 7) * 0.37}s`,
+                  }}
+                >
+                  <circle r={node.r} fill={node.color} stroke="#f7f0de" strokeWidth={2.5} />
+                  <text
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    fontSize={14}
+                    style={{ pointerEvents: "none" }}
+                  >
+                    {TYPE_ICON[node.type ?? "NOTE"]}
+                  </text>
+                  <text
+                    y={34}
+                    textAnchor="middle"
+                    fontSize={11}
+                    fill="#4a4436"
+                    fontFamily="'Libre Baskerville', serif"
+                    style={{ pointerEvents: "none" }}
+                  >
+                    {node.title.length > 18 ? `${node.title.slice(0, 18)}…` : node.title}
+                  </text>
+                </g>
+              </g>
+            ))}
         </svg>
       </div>
     </div>
