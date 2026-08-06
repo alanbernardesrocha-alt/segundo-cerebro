@@ -1,8 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
 import { getDB, listSpacesWithCounts, listItems } from "@/lib/db";
 import ItemCard from "@/components/ItemCard";
-import NewItemButton from "@/components/NewItemButton";
 
 export const dynamic = "force-dynamic";
 
@@ -18,46 +16,7 @@ export default async function DashboardPage() {
   const totalItems = spaces.reduce((sum, s) => sum + s.itemCount, 0);
 
   return (
-    <div className="page-frame mx-auto max-w-5xl px-8 py-10">
-      {/* Hero — logo emoldurado + título carimbado */}
-      <header
-        className="mb-8 flex items-center gap-6 rounded-sm border-b-2 border-dashed border-[#6B4A2F]/40 px-6 py-5"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(246,239,220,0.78), rgba(246,239,220,0.78)), url('/textures/paper.jpg')",
-          backgroundSize: "auto, 520px 520px",
-        }}
-      >
-        <div className="relative shrink-0 rounded-lg border border-[#6B4A2F]/50 bg-[#efe4c9] p-2 shadow-[inset_0_0_0_1px_rgba(201,154,69,0.5),3px_5px_14px_rgba(43,29,18,0.28)]">
-          <Image
-            src="/cerebro-logo.png"
-            alt="Segundo cérebro de Alan — cérebro com cartola"
-            width={140}
-            height={152}
-            priority
-            className="emblem-breathe h-28 w-auto object-contain drop-shadow-[2px_5px_7px_rgba(43,29,18,0.32)]"
-          />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="font-stamp text-[11px] uppercase tracking-[0.32em] text-[#b5482d]">
-            Gabinete Cerebral
-          </p>
-          <h1 className="mt-1 font-display text-4xl font-extrabold leading-none text-[#2b1d12] [text-shadow:0_1px_0_rgba(255,240,210,0.6)]">
-            Segundo cérebro de Alan
-          </h1>
-          <p className="mt-2 font-stamp text-xs tracking-wide text-[#6b5c47]">
-            <span className="font-bold text-[#b5482d]">{totalItems}</span>{" "}
-            {totalItems === 1 ? "item" : "itens"} ·{" "}
-            <span className="font-bold text-[#3e6259]">{spaces.length}</span>{" "}
-            {spaces.length === 1 ? "tema" : "temas"} ·{" "}
-            <span className="font-bold text-[#46617e]">{totalConnections}</span>{" "}
-            {totalConnections === 1 ? "conexão" : "conexões"}
-          </p>
-        </div>
-        <div className="shrink-0 self-start">
-          <NewItemButton spaces={spaces} />
-        </div>
-      </header>
+    <div className="page-frame mx-auto max-w-5xl px-4 py-6 md:px-8 md:py-10">
 
       {spaces.length === 0 ? (
         <div className="card-vintage rounded-sm border-dashed px-6 py-10 text-center">
@@ -105,9 +64,9 @@ export default async function DashboardPage() {
             </h2>
             <Link
               href="/graph"
-              className="card-vintage flex items-center gap-5 rounded-sm px-5 py-4"
+              className="card-vintage flex flex-col items-start gap-4 rounded-sm px-5 py-4 sm:flex-row sm:items-center sm:gap-5"
             >
-              <svg viewBox="0 0 200 96" className="h-24 w-52 shrink-0" aria-hidden>
+              <svg viewBox="0 0 200 96" className="h-20 w-40 shrink-0 sm:h-24 sm:w-52" aria-hidden>
                 <g stroke="#6b4a2f" strokeWidth="1.4" opacity="0.5">
                   <line x1="46" y1="30" x2="100" y2="20" />
                   <line x1="100" y1="20" x2="150" y2="46" />
@@ -132,7 +91,7 @@ export default async function DashboardPage() {
                   nota cita outra, compartilha tema ou referência.
                 </p>
               </div>
-              <span className="btn-stamp btn-stamp-outline shrink-0">Abrir o mapa</span>
+              <span className="btn-stamp btn-stamp-outline w-full shrink-0 justify-center sm:w-auto">Abrir o mapa</span>
             </Link>
           </section>
 
