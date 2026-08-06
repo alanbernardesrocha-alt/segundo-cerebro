@@ -156,7 +156,7 @@ export default function GraphView({ data }: { data: GraphData }) {
     });
   }
 
-  function onPointerDown(e: React.PointerEvent<SVGSVGElement>, id?: string) {
+  function onPointerDown(e: React.PointerEvent<SVGElement>, id?: string) {
     svgRef.current?.setPointerCapture?.(e.pointerId);
     const vb = toViewBox(e.clientX, e.clientY);
     pointers.current.set(e.pointerId, vb);
