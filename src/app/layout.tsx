@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import { SidebarProvider } from "@/components/SidebarContext";
@@ -9,6 +9,15 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Segundo cérebro de Alan",
   description: "Suas anotações e referências, conectadas.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "2º Cérebro",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#2b1d12",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
