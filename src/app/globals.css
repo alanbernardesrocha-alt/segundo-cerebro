@@ -132,6 +132,43 @@ main {
   background-color: rgba(181, 72, 45, 0.35);
 }
 
+.header-back {
+  padding: 0.4rem 0.7rem;
+  border-radius: 3px;
+  font-family: "Special Elite", monospace;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #d8c8a0;
+  border: 1px solid rgba(201, 154, 69, 0.45);
+  background-color: rgba(0, 0, 0, 0.18);
+  transition: color 0.2s ease, background-color 0.2s ease, transform 0.15s ease;
+}
+.header-back:hover {
+  color: #f6ecd4;
+  background-color: rgba(255, 255, 255, 0.08);
+  transform: translateX(-2px);
+}
+
+/* controles de zoom do grafo (mobile/desktop) */
+.graph-zoom-btn {
+  display: flex;
+  height: 34px;
+  width: 34px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(107, 74, 47, 0.4);
+  background-color: #fbf7ea;
+  color: #6b4a2f;
+  font-family: "Libre Baskerville", serif;
+  font-size: 18px;
+  line-height: 1;
+  box-shadow: 1px 2px 5px rgba(43, 29, 18, 0.18);
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+.graph-zoom-btn:hover { background-color: #f1e9d3; }
+.graph-zoom-btn:active { transform: scale(0.94); }
+
 .nav-stamp {
   position: relative;
   display: block;

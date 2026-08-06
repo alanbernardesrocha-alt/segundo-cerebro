@@ -15,6 +15,8 @@ import type { GraphData } from "@/lib/types";
 const WIDTH = 900;
 const HEIGHT = 620;
 const PAD = 48; // margem interna: os nós nunca encostam na borda
+const MIN_SCALE = 0.6;
+const MAX_SCALE = 4;
 
 type SimNode = {
   id: string;
@@ -28,6 +30,8 @@ type SimNode = {
   y: number;
 };
 
+type View = { scale: number; tx: number; ty: number };
+
 const TYPE_ICON: Record<string, string> = { NOTE: "📝", FILE: "📎", LINK: "🔗" };
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 const hubId = (space: string) => `hub:${space}`;
@@ -36,9 +40,14 @@ export default function GraphView({ data }: { data: GraphData }) {
   const router = useRouter();
   const [nodes, setNodes] = useState<SimNode[]>([]);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [view, setView] = useState<View>({ scale: 1, tx: 0, ty: 0 });
   const dragId = useRef<string | null>(null);
   const dragMoved = useRef(false);
   const svgRef = useRef<SVGSVGElement>(null);
+  // pointers ativos (coordenadas em unidades do viewBox) para pan + pinça
+  const pointers = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const pinchPrev = useRef<{ dist: number; cx: number; cy: number } | null>(null);
+  const panPrev = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     if (data.nodes.length === 0) {
@@ -46,7 +55,6 @@ export default function GraphView({ data }: { data: GraphData }) {
       return;
     }
 
-    // 1) um nó-tema (hub) por espaço + os itens
     const colorBySpace = new Map<string, string>();
     for (const n of data.nodes) {
       if (!colorBySpace.has(n.spaceName)) colorBySpace.set(n.spaceName, n.spaceColor);
@@ -84,7 +92,6 @@ export default function GraphView({ data }: { data: GraphData }) {
 
     const simNodes = [...hubs, ...items];
 
-    // 2) ligações: cada item se liga ao seu tema (raio) + conexões confirmadas (item–item)
     const spokeLinks = data.nodes.map((n) => ({
       source: n.id,
       target: hubId(n.spaceName),
@@ -113,7 +120,6 @@ export default function GraphView({ data }: { data: GraphData }) {
 
     for (let i = 0; i < 440; i++) simulation.tick();
 
-    // 3) trava tudo dentro do quadro — nada escapa da moldura
     for (const n of simNodes) {
       n.x = clamp(n.x, PAD, WIDTH - PAD);
       n.y = clamp(n.y, PAD, HEIGHT - PAD);
@@ -128,31 +134,114 @@ export default function GraphView({ data }: { data: GraphData }) {
     [data]
   );
 
-  function toLocal(e: React.PointerEvent<SVGSVGElement>) {
+  // client XY -> coordenadas do viewBox (ignora o transform interno de zoom)
+  function toViewBox(clientX: number, clientY: number) {
     const rect = svgRef.current!.getBoundingClientRect();
     return {
-      x: ((e.clientX - rect.left) / rect.width) * WIDTH,
-      y: ((e.clientY - rect.top) / rect.height) * HEIGHT,
+      x: ((clientX - rect.left) / rect.width) * WIDTH,
+      y: ((clientY - rect.top) / rect.height) * HEIGHT,
     };
   }
-  function onPointerDown(id: string) {
-    dragId.current = id;
-    dragMoved.current = false;
+  // viewBox -> coordenadas do grafo (desfaz zoom/pan) para arrastar nós
+  function toGraph(vx: number, vy: number, v: View) {
+    return { x: (vx - v.tx) / v.scale, y: (vy - v.ty) / v.scale };
   }
+
+  // zoom mantendo o ponto (vx,vy) do viewBox fixo na tela
+  function zoomAt(vx: number, vy: number, factor: number) {
+    setView((v) => {
+      const scale = clamp(v.scale * factor, MIN_SCALE, MAX_SCALE);
+      const k = scale / v.scale;
+      return { scale, tx: vx - (vx - v.tx) * k, ty: vy - (vy - v.ty) * k };
+    });
+  }
+
+  function onPointerDown(e: React.PointerEvent<SVGElement>, id?: string) {
+    svgRef.current?.setPointerCapture?.(e.pointerId);
+    const vb = toViewBox(e.clientX, e.clientY);
+    pointers.current.set(e.pointerId, vb);
+    if (id) {
+      dragId.current = id;
+      dragMoved.current = false;
+    } else if (pointers.current.size === 1) {
+      panPrev.current = vb; // pan de fundo com 1 dedo
+    }
+    if (pointers.current.size === 2) {
+      dragId.current = null; // pinça vence o arrasto
+      const [a, b] = [...pointers.current.values()];
+      pinchPrev.current = {
+        dist: Math.hypot(a.x - b.x, a.y - b.y),
+        cx: (a.x + b.x) / 2,
+        cy: (a.y + b.y) / 2,
+      };
+    }
+  }
+
   function onPointerMove(e: React.PointerEvent<SVGSVGElement>) {
-    if (!dragId.current || !svgRef.current) return;
-    dragMoved.current = true;
-    const { x, y } = toLocal(e);
-    setNodes((prev) =>
-      prev.map((n) =>
-        n.id === dragId.current
-          ? { ...n, x: clamp(x, PAD, WIDTH - PAD), y: clamp(y, PAD, HEIGHT - PAD) }
-          : n
-      )
-    );
+    if (!svgRef.current) return;
+    const vb = toViewBox(e.clientX, e.clientY);
+    if (pointers.current.has(e.pointerId)) pointers.current.set(e.pointerId, vb);
+
+    // 2 dedos -> pinça (zoom + arrasto do conjunto)
+    if (pointers.current.size >= 2) {
+      const [a, b] = [...pointers.current.values()];
+      const dist = Math.hypot(a.x - b.x, a.y - b.y);
+      const cx = (a.x + b.x) / 2;
+      const cy = (a.y + b.y) / 2;
+      const prev = pinchPrev.current;
+      if (prev && prev.dist > 0) {
+        setView((v) => {
+          const scale = clamp(v.scale * (dist / prev.dist), MIN_SCALE, MAX_SCALE);
+          const k = scale / v.scale;
+          return {
+            scale,
+            tx: cx - (prev.cx - v.tx) * k,
+            ty: cy - (prev.cy - v.ty) * k,
+          };
+        });
+      }
+      pinchPrev.current = { dist, cx, cy };
+      return;
+    }
+
+    // arrastar um nó
+    if (dragId.current) {
+      dragMoved.current = true;
+      const g = toGraph(vb.x, vb.y, view);
+      setNodes((prev) =>
+        prev.map((n) =>
+          n.id === dragId.current
+            ? { ...n, x: clamp(g.x, PAD, WIDTH - PAD), y: clamp(g.y, PAD, HEIGHT - PAD) }
+            : n
+        )
+      );
+      return;
+    }
+
+    // pan de fundo com 1 dedo/mouse
+    if (panPrev.current) {
+      const dx = vb.x - panPrev.current.x;
+      const dy = vb.y - panPrev.current.y;
+      panPrev.current = vb;
+      setView((v) => ({ ...v, tx: v.tx + dx, ty: v.ty + dy }));
+    }
   }
-  function onPointerUp() {
-    dragId.current = null;
+
+  function onPointerUp(e: React.PointerEvent<SVGSVGElement>) {
+    pointers.current.delete(e.pointerId);
+    if (pointers.current.size < 2) pinchPrev.current = null;
+    if (pointers.current.size === 0) {
+      panPrev.current = null;
+      dragId.current = null;
+    } else {
+      // se sobrou 1 dedo depois da pinça, ele reassume o pan
+      panPrev.current = [...pointers.current.values()][0];
+    }
+  }
+
+  function onWheel(e: React.WheelEvent<SVGSVGElement>) {
+    const vb = toViewBox(e.clientX, e.clientY);
+    zoomAt(vb.x, vb.y, e.deltaY < 0 ? 1.12 : 1 / 1.12);
   }
 
   if (data.nodes.length === 0) {
@@ -182,140 +271,174 @@ export default function GraphView({ data }: { data: GraphData }) {
           </svg>
           conexão entre itens
         </span>
+        <span className="ml-auto font-stamp text-[10px] text-[#8a6f3f] sm:hidden">
+          ✦ dois dedos para dar zoom
+        </span>
       </div>
 
       <div
-        className="overflow-hidden border border-[#6B4A2F]/40 bg-[#fffdf6] shadow-[inset_0_0_0_1px_rgba(201,154,69,0.35)]"
+        className="relative overflow-hidden border border-[#6B4A2F]/40 bg-[#fffdf6] shadow-[inset_0_0_0_1px_rgba(201,154,69,0.35)]"
         style={{ width: "100%", aspectRatio: `${WIDTH} / ${HEIGHT}`, maxHeight: "72vh" }}
       >
         <svg
           ref={svgRef}
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
           preserveAspectRatio="xMidYMid meet"
-          className="h-full w-full touch-none"
+          className="h-full w-full touch-none select-none"
+          onPointerDown={(e) => onPointerDown(e)}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
           onPointerLeave={onPointerUp}
+          onWheel={onWheel}
         >
-          {/* raios: item → tema (tingidos pela cor do tema) */}
-          {spokes.map((sp) => {
-            const s = nodeById.get(sp.item);
-            const t = nodeById.get(sp.hub);
-            if (!s || !t) return null;
-            const hot = hoveredId === sp.item || hoveredId === sp.hub;
-            return (
-              <line
-                key={sp.id}
-                x1={s.x}
-                y1={s.y}
-                x2={t.x}
-                y2={t.y}
-                stroke={t.color}
-                strokeWidth={hot ? 2.6 : 1.5}
-                opacity={hot ? 0.85 : 0.4}
-              />
-            );
-          })}
-
-          {/* conexões confirmadas entre itens */}
-          {data.edges.map((edge) => {
-            const s = nodeById.get(edge.source);
-            const t = nodeById.get(edge.target);
-            if (!s || !t) return null;
-            const hot = hoveredId === edge.source || hoveredId === edge.target;
-            return (
-              <line
-                key={edge.id}
-                x1={s.x}
-                y1={s.y}
-                x2={t.x}
-                y2={t.y}
-                stroke="#6b4a2f"
-                strokeWidth={hot ? 2.8 : 1.8}
-                opacity={hot ? 0.9 : 0.55}
-              />
-            );
-          })}
-
-          {/* nós-tema (hubs) */}
-          {nodes
-            .filter((n) => n.kind === "hub")
-            .map((node) => (
-              <g
-                key={node.id}
-                className="graph-node"
-                transform={`translate(${node.x},${node.y})`}
-                onPointerDown={() => onPointerDown(node.id)}
-                onPointerEnter={() => setHoveredId(node.id)}
-                onPointerLeave={() => setHoveredId((h) => (h === node.id ? null : h))}
-              >
-                <circle r={node.r + 5} fill={node.color} opacity={0.14} />
-                <circle
-                  r={node.r}
-                  fill="#fffdf6"
-                  stroke={node.color}
-                  strokeWidth={3}
+          <g transform={`translate(${view.tx},${view.ty}) scale(${view.scale})`}>
+            {/* raios: item → tema (tingidos pela cor do tema) */}
+            {spokes.map((sp) => {
+              const s = nodeById.get(sp.item);
+              const t = nodeById.get(sp.hub);
+              if (!s || !t) return null;
+              const hot = hoveredId === sp.item || hoveredId === sp.hub;
+              return (
+                <line
+                  key={sp.id}
+                  x1={s.x}
+                  y1={s.y}
+                  x2={t.x}
+                  y2={t.y}
+                  stroke={t.color}
+                  strokeWidth={hot ? 2.6 : 1.5}
+                  opacity={hot ? 0.85 : 0.4}
                 />
-                <circle r={node.r - 8} fill={node.color} opacity={0.85} />
-                <text
-                  y={node.r + 17}
-                  textAnchor="middle"
-                  fontSize={12}
-                  fontWeight={700}
-                  fill="#3a332a"
-                  fontFamily="'Libre Baskerville', serif"
-                  style={{ pointerEvents: "none" }}
-                >
-                  {node.title.length > 20 ? `${node.title.slice(0, 20)}…` : node.title}
-                </text>
-              </g>
-            ))}
+              );
+            })}
 
-          {/* nós-item */}
-          {nodes
-            .filter((n) => n.kind === "item")
-            .map((node, i) => (
-              <g
-                key={node.id}
-                className="graph-node"
-                transform={`translate(${node.x},${node.y})`}
-                onPointerDown={() => onPointerDown(node.id)}
-                onPointerEnter={() => setHoveredId(node.id)}
-                onPointerLeave={() => setHoveredId((h) => (h === node.id ? null : h))}
-                onClick={() => {
-                  if (!dragMoved.current) router.push(`/items/${node.id}`);
-                }}
-              >
+            {/* conexões confirmadas entre itens */}
+            {data.edges.map((edge) => {
+              const s = nodeById.get(edge.source);
+              const t = nodeById.get(edge.target);
+              if (!s || !t) return null;
+              const hot = hoveredId === edge.source || hoveredId === edge.target;
+              return (
+                <line
+                  key={edge.id}
+                  x1={s.x}
+                  y1={s.y}
+                  x2={t.x}
+                  y2={t.y}
+                  stroke="#6b4a2f"
+                  strokeWidth={hot ? 2.8 : 1.8}
+                  opacity={hot ? 0.9 : 0.55}
+                />
+              );
+            })}
+
+            {/* nós-tema (hubs) */}
+            {nodes
+              .filter((n) => n.kind === "hub")
+              .map((node) => (
                 <g
-                  className="graph-float"
-                  style={{
-                    animationDuration: `${4.4 + (i % 3) * 0.7}s`,
-                    animationDelay: `${(i % 7) * 0.37}s`,
+                  key={node.id}
+                  className="graph-node"
+                  transform={`translate(${node.x},${node.y})`}
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    onPointerDown(e, node.id);
                   }}
+                  onPointerEnter={() => setHoveredId(node.id)}
+                  onPointerLeave={() => setHoveredId((h) => (h === node.id ? null : h))}
                 >
-                  <circle r={node.r} fill={node.color} stroke="#f7f0de" strokeWidth={2.5} />
+                  <circle r={node.r + 5} fill={node.color} opacity={0.14} />
+                  <circle r={node.r} fill="#fffdf6" stroke={node.color} strokeWidth={3} />
+                  <circle r={node.r - 8} fill={node.color} opacity={0.85} />
                   <text
+                    y={node.r + 17}
                     textAnchor="middle"
-                    dominantBaseline="central"
-                    fontSize={14}
-                    style={{ pointerEvents: "none" }}
-                  >
-                    {TYPE_ICON[node.type ?? "NOTE"]}
-                  </text>
-                  <text
-                    y={34}
-                    textAnchor="middle"
-                    fontSize={11}
-                    fill="#4a4436"
+                    fontSize={12}
+                    fontWeight={700}
+                    fill="#3a332a"
                     fontFamily="'Libre Baskerville', serif"
                     style={{ pointerEvents: "none" }}
                   >
-                    {node.title.length > 18 ? `${node.title.slice(0, 18)}…` : node.title}
+                    {node.title.length > 20 ? `${node.title.slice(0, 20)}…` : node.title}
                   </text>
                 </g>
-              </g>
-            ))}
+              ))}
+
+            {/* nós-item */}
+            {nodes
+              .filter((n) => n.kind === "item")
+              .map((node, i) => (
+                <g
+                  key={node.id}
+                  className="graph-node"
+                  transform={`translate(${node.x},${node.y})`}
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    onPointerDown(e, node.id);
+                  }}
+                  onPointerEnter={() => setHoveredId(node.id)}
+                  onPointerLeave={() => setHoveredId((h) => (h === node.id ? null : h))}
+                  onClick={() => {
+                    if (!dragMoved.current) router.push(`/items/${node.id}`);
+                  }}
+                >
+                  <g
+                    className="graph-float"
+                    style={{
+                      animationDuration: `${4.4 + (i % 3) * 0.7}s`,
+                      animationDelay: `${(i % 7) * 0.37}s`,
+                    }}
+                  >
+                    <circle r={node.r} fill={node.color} stroke="#f7f0de" strokeWidth={2.5} />
+                    <text
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      fontSize={14}
+                      style={{ pointerEvents: "none" }}
+                    >
+                      {TYPE_ICON[node.type ?? "NOTE"]}
+                    </text>
+                    <text
+                      y={34}
+                      textAnchor="middle"
+                      fontSize={11}
+                      fill="#4a4436"
+                      fontFamily="'Libre Baskerville', serif"
+                      style={{ pointerEvents: "none" }}
+                    >
+                      {node.title.length > 18 ? `${node.title.slice(0, 18)}…` : node.title}
+                    </text>
+                  </g>
+                </g>
+              ))}
+          </g>
         </svg>
+
+        {/* controles de zoom — úteis no toque e no mouse */}
+        <div className="absolute bottom-3 right-3 flex flex-col gap-1.5">
+          <button
+            className="graph-zoom-btn"
+            aria-label="Aproximar"
+            onClick={() => zoomAt(WIDTH / 2, HEIGHT / 2, 1.25)}
+          >
+            +
+          </button>
+          <button
+            className="graph-zoom-btn"
+            aria-label="Afastar"
+            onClick={() => zoomAt(WIDTH / 2, HEIGHT / 2, 1 / 1.25)}
+          >
+            −
+          </button>
+          <button
+            className="graph-zoom-btn text-[13px]"
+            aria-label="Restaurar zoom"
+            onClick={() => setView({ scale: 1, tx: 0, ty: 0 })}
+          >
+            ⤢
+          </button>
+        </div>
       </div>
     </div>
   );

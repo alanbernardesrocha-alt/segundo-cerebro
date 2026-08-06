@@ -2,6 +2,7 @@ import Image from "next/image";
 import { getDB, listSpacesWithCounts } from "@/lib/db";
 import NewItemButton from "./NewItemButton";
 import NavLinks from "./NavLinks";
+import BackButton from "./BackButton";
 import SidebarToggle from "./SidebarToggle";
 
 const SCALLOP =
@@ -28,7 +29,7 @@ export default async function Header() {
       <div className="relative flex items-center gap-4 px-4 pb-3 pt-5 md:gap-6 md:px-8 md:pt-6">
         <SidebarToggle />
         <span
-          className="relative hidden h-[62px] w-[62px] shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#c99a45] shadow-[0_0_0_4px_rgba(0,0,0,0.35),inset_0_3px_12px_rgba(0,0,0,0.6)] sm:flex md:h-[88px] md:w-[88px]"
+          className="relative flex h-[46px] w-[46px] shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#c99a45] shadow-[0_0_0_3px_rgba(0,0,0,0.35),inset_0_3px_12px_rgba(0,0,0,0.6)] sm:h-[62px] sm:w-[62px] md:h-[88px] md:w-[88px]"
           style={{ background: "radial-gradient(circle at 50% 38%,#3a2817,#1c130b)" }}
         >
           <Image
@@ -59,6 +60,7 @@ export default async function Header() {
         className="relative flex items-center gap-2 px-4 py-2 md:px-8"
         style={{ background: "rgba(15,10,6,0.32)", borderTop: "1px solid rgba(201,154,69,0.3)" }}
       >
+        <BackButton />
         <NavLinks />
         <div className="hidden flex-1 md:block" />
         <div className="hidden items-center gap-3 font-stamp text-[11px] tracking-wide text-[#c9b58c] md:flex">

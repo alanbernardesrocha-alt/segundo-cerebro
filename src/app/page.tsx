@@ -64,9 +64,9 @@ export default async function DashboardPage() {
             </h2>
             <Link
               href="/graph"
-              className="card-vintage flex items-center gap-5 rounded-sm px-5 py-4"
+              className="card-vintage flex flex-col items-start gap-4 rounded-sm px-5 py-4 sm:flex-row sm:items-center sm:gap-5"
             >
-              <svg viewBox="0 0 200 96" className="h-24 w-52 shrink-0" aria-hidden>
+              <svg viewBox="0 0 200 96" className="h-20 w-40 shrink-0 sm:h-24 sm:w-52" aria-hidden>
                 <g stroke="#6b4a2f" strokeWidth="1.4" opacity="0.5">
                   <line x1="46" y1="30" x2="100" y2="20" />
                   <line x1="100" y1="20" x2="150" y2="46" />
@@ -91,7 +91,7 @@ export default async function DashboardPage() {
                   nota cita outra, compartilha tema ou referência.
                 </p>
               </div>
-              <span className="btn-stamp btn-stamp-outline shrink-0">Abrir o mapa</span>
+              <span className="btn-stamp btn-stamp-outline w-full shrink-0 justify-center sm:w-auto">Abrir o mapa</span>
             </Link>
           </section>
 
